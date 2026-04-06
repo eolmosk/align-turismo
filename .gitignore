@@ -27,5 +27,8 @@ npm-debug.log*
 .idea/
 .vscode/
 
+# pitch deck (no publicar en producción)
+pitch-deck.html
+
 # nested duplicate
 minutas-app/
