@@ -237,7 +237,7 @@ export default function MeetingDetailPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-5">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32 space-y-5">
 
         {/* Banner onboarding */}
         {isOnboarding && hasAI && (

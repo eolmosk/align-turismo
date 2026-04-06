@@ -455,7 +455,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32">
         {tab === 'escuelas' && <EscuelasTab schools={schools} onReload={loadData} />}
         {tab === 'usuarios' && <UsuariosTab users={users} schools={schools} onReload={loadData} />}
       </main>

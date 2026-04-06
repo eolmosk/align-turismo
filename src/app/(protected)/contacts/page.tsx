@@ -156,7 +156,7 @@ export default function ContactsPage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-20 space-y-4">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-32 space-y-4">
 
         {/* Panel de importación CSV */}
         {showImport && (

@@ -123,7 +123,7 @@ export default function UsersPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32 space-y-6">
 
         {/* Tabs */}
         <div className="flex gap-1 bg-warm-100 p-1 rounded-lg w-fit">
