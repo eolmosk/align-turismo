@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# env files
+.env
+.env.local
+.env.*.local
+
+# build
+tsconfig.tsbuildinfo
+
+# debug
+npm-debug.log*
+
+# misc
+.DS_Store
+*.tsbuildinfo
+
+# vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+
+# nested duplicate
+minutas-app/
