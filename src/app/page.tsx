@@ -7,6 +7,9 @@ export default async function Home() {
   const session = await getServerSession(authOptions)
   if (session) redirect('/dashboard')
 
+  const whatsapp = process.env.CONTACT_WHATSAPP ?? ''
+  const calendly = process.env.CONTACT_CALENDLY ?? ''
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Neue Montreal', -apple-system, BlinkMacSystemFont, sans-serif" }}>
 
@@ -49,7 +52,9 @@ export default async function Home() {
               </svg>
             </Link>
             <a
-              href="https://wa.me/59899000000"
+              href={calendly}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-medium px-8 py-3.5 rounded-xl hover:bg-gray-50 transition-colors"
             >
               Agendar una demo
@@ -226,17 +231,19 @@ export default async function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="https://wa.me/59899000000"
+              href={calendly}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 bg-[#e94560] text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-[#d63a53] transition-colors shadow-lg shadow-[#e94560]/25"
             >
-              Agendar demo por WhatsApp
+              Agendar una demo
             </a>
-            <Link
-              href="/auth"
+            <a
+              href={`https://wa.me/${whatsapp}`}
               className="inline-flex items-center justify-center gap-2 border border-white/20 text-white font-medium px-8 py-3.5 rounded-xl hover:bg-white/10 transition-colors"
             >
-              Ingresar a la plataforma
-            </Link>
+              Escribinos por WhatsApp
+            </a>
           </div>
         </div>
       </section>
@@ -249,7 +256,7 @@ export default async function Home() {
           <span>para</span>
           <span className="font-medium text-gray-400">FrameOps &middot; Soluciones</span>
         </div>
-        <p className="text-xs text-gray-600 mt-3">contacto@frameops.net</p>
+        <p className="text-xs text-gray-600 mt-3">align.frameops.net</p>
       </footer>
 
     </div>
