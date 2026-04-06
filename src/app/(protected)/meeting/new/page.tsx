@@ -291,19 +291,19 @@ function NewMeetingContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-warm-200 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <button onClick={() => isOnboarding ? router.push('/dashboard') : router.back()} className="text-warm-400 hover:text-warm-600">
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-4">
+          <button onClick={() => isOnboarding ? router.push('/dashboard') : router.back()} className="text-warm-400 hover:text-warm-600 flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <SchoolLogo />
-          <h1 className="text-base font-medium text-warm-900">Nueva reunión</h1>
+          <div className="hidden sm:block"><SchoolLogo /></div>
+          <h1 className="text-sm sm:text-base font-medium text-warm-900">Nueva reunión</h1>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-5">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-5">
 
         {/* ─── HILO ─────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-warm-200 p-5">
@@ -461,7 +461,7 @@ function NewMeetingContent() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-warm-400 block mb-1">Curso / Grupo</label>
                   <input type="text" value={course} onChange={e => setCourse(e.target.value)}

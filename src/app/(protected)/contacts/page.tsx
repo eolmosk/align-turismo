@@ -128,34 +128,35 @@ export default function ContactsPage() {
   return (
     <div className="min-h-screen bg-white">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
           {toast}
         </div>
       )}
 
-      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
-          <Link href="/dashboard" className="text-warm-400 hover:text-warm-600">
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-3xl mx-auto flex items-center gap-2 sm:gap-4">
+          <Link href="/dashboard" className="text-warm-400 hover:text-warm-600 flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <SchoolLogo />
-          <div className="flex-1">
-            <h1 className="text-base font-medium text-warm-900">Contactos</h1>
-            <p className="text-xs text-warm-500">{contacts.length} contacto{contacts.length !== 1 ? 's' : ''} · {session?.user?.school?.name}</p>
+          <div className="hidden sm:block"><SchoolLogo /></div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm sm:text-base font-medium text-warm-900">Contactos</h1>
+            <p className="text-[11px] sm:text-xs text-warm-500 truncate">{contacts.length} contacto{contacts.length !== 1 ? 's' : ''} · {session?.user?.school?.name}</p>
           </div>
           <button onClick={() => { setShowImport(!showImport); setImportResult(null) }}
-            className="text-xs border border-warm-200 text-warm-600 px-3 py-2 rounded-lg hover:bg-warm-50 transition-colors flex items-center gap-1.5">
+            className="text-xs border border-warm-200 text-warm-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-warm-50 transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Importar CSV
+            <span className="hidden sm:inline">Importar CSV</span>
+            <span className="sm:hidden">CSV</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-20 space-y-4">
 
         {/* Panel de importación CSV */}
         {showImport && (

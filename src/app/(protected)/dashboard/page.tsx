@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [loadingThreads, setLoadingThreads] = useState(true)
   const [error, setError] = useState('')
   const [showNewThread, setShowNewThread] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   // Reuniones
   const [meetings, setMeetings] = useState<Meeting[]>([])
@@ -144,7 +145,7 @@ export default function Dashboard() {
               <p className="text-xs text-warm-500 truncate">{session?.user?.name ?? session?.user?.email}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Links secundarios — ocultos en mobile */}
             <div className="hidden sm:flex items-center gap-2">
               {session?.user?.id === '757692ca-333e-469d-a9eb-d370db452cde' && (
@@ -159,15 +160,22 @@ export default function Dashboard() {
               <Link href="/contacts" className="text-xs text-warm-500 hover:text-warm-700 px-2 py-1">Contactos</Link>
             </div>
             <Link href="/meeting/new"
-              className="text-xs sm:text-sm border border-warm-200 text-warm-700 px-3 py-2 rounded-lg hover:bg-warm-50 transition-colors whitespace-nowrap">
+              className="text-xs sm:text-sm border border-warm-200 text-warm-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-warm-50 transition-colors whitespace-nowrap">
               + Reunión
             </Link>
             <button onClick={() => setShowNewThread(true)}
-              className="text-xs sm:text-sm bg-brand text-white px-3 py-2 rounded-lg hover:bg-brand-600 transition-colors whitespace-nowrap">
+              className="text-xs sm:text-sm bg-brand text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-brand-600 transition-colors whitespace-nowrap">
               + Hilo
             </button>
+            {/* Mobile menu toggle */}
+            <button onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="sm:hidden text-warm-400 hover:text-warm-600 p-1.5 rounded-lg hover:bg-warm-100 transition-colors">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
             <button onClick={() => signOut({ callbackUrl: '/auth' })} title="Cerrar sesión"
-              className="text-warm-400 hover:text-warm-600 p-2 rounded-lg hover:bg-warm-100 transition-colors">
+              className="hidden sm:block text-warm-400 hover:text-warm-600 p-2 rounded-lg hover:bg-warm-100 transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -175,11 +183,30 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+        {/* Mobile dropdown menu */}
+        {showMobileMenu && (
+          <div className="sm:hidden border-t border-warm-100 mt-3 pt-3 flex flex-wrap gap-2">
+            {session?.user?.id === '757692ca-333e-469d-a9eb-d370db452cde' && (
+              <Link href="/admin" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Admin</Link>
+            )}
+            {session?.user?.role === 'owner' && (
+              <Link href="/dashboard/group" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Grupo</Link>
+            )}
+            {(session?.user?.role === 'owner' || session?.user?.role === 'director') && (
+              <Link href="/users" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Usuarios</Link>
+            )}
+            <Link href="/contacts" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Contactos</Link>
+            <button onClick={() => signOut({ callbackUrl: '/auth' })}
+              className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-warm-100 px-6 overflow-x-auto">
-        <div className="max-w-4xl mx-auto flex gap-6 min-w-max">
+      <div className="bg-white border-b border-warm-100 px-4 sm:px-6 overflow-x-auto">
+        <div className="max-w-4xl mx-auto flex gap-3 sm:gap-6 min-w-max">
           {(['hilos', 'reuniones', 'pendientes', 'stats'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-sm py-3 border-b-2 transition-colors whitespace-nowrap ${
@@ -197,7 +224,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20">
         {tab === 'hilos' && <HilosTab threads={threads} onNewThread={() => setShowNewThread(true)} onUnarchive={() => {
           fetch('/api/threads').then(r => r.json()).then(data => { setThreads(Array.isArray(data) ? data : []) })
         }} />}
@@ -669,7 +696,7 @@ function StatsTab({ stats, loading }: { stats: StatsData | null; loading: boolea
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Participantes frecuentes */}
         <div className="bg-white rounded-xl border border-warm-200 p-5">
           <h3 className="text-sm font-medium text-warm-900 mb-3">Participantes frecuentes</h3>
@@ -832,7 +859,7 @@ function NewThreadModal({ onClose, onCreated }: {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-md p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-medium text-warm-900">Nuevo hilo de seguimiento</h2>
           <button onClick={onClose} className="text-warm-400 hover:text-warm-600">
@@ -891,7 +918,7 @@ function NewThreadModal({ onClose, onCreated }: {
               placeholder="Ej: Seguimiento mensual del rendimiento de 3er grado" className="w-full text-sm" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Curso</label>
               <input type="text" value={course} onChange={e => setCourse(e.target.value)}

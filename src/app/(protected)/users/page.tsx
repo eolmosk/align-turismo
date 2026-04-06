@@ -107,23 +107,23 @@ export default function UsersPage() {
   return (
     <div className="min-h-screen bg-white">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
           {toast}
         </div>
       )}
-      <header className="bg-white border-b border-warm-200 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <Link href="/dashboard" className="text-warm-400 hover:text-warm-600">
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-4">
+          <Link href="/dashboard" className="text-warm-400 hover:text-warm-600 flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <SchoolLogo />
-          <h1 className="text-base font-medium text-warm-900">Gestión de usuarios</h1>
+          <div className="hidden sm:block"><SchoolLogo /></div>
+          <h1 className="text-sm sm:text-base font-medium text-warm-900">Gestión de usuarios</h1>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-6">
 
         {/* Tabs */}
         <div className="flex gap-1 bg-warm-100 p-1 rounded-lg w-fit">

@@ -182,7 +182,7 @@ function EscuelasTab({ schools, onReload }: { schools: School[]; onReload: () =>
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 space-y-4">
           <h3 className="text-sm font-semibold text-gray-900">{editing ? 'Editar escuela' : 'Nueva escuela'}</h3>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-gray-600 block mb-1">Nombre *</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
@@ -426,21 +426,21 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">Panel de administración</h1>
-            <p className="text-xs text-gray-400">Align &middot; Gestión de escuelas y usuarios</p>
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-semibold text-gray-900">Panel de administración</h1>
+            <p className="text-[11px] sm:text-xs text-gray-400 truncate">Align &middot; Gestión de escuelas y usuarios</p>
           </div>
-          <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2 border border-gray-200 rounded-lg">
-            Volver al dashboard
+          <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap flex-shrink-0">
+            Volver
           </Link>
         </div>
       </header>
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 flex gap-1">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-1">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -455,7 +455,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20">
         {tab === 'escuelas' && <EscuelasTab schools={schools} onReload={loadData} />}
         {tab === 'usuarios' && <UsuariosTab users={users} schools={schools} onReload={loadData} />}
       </main>

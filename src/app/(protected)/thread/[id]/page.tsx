@@ -118,72 +118,86 @@ export default function ThreadPage() {
   return (
     <div className="min-h-screen bg-white">
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50">
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50">
           {toast}
         </div>
       )}
 
       {/* Header */}
-      <header className="bg-white border-b border-warm-200 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <button onClick={() => router.push('/dashboard')} className="text-warm-400 hover:text-warm-600">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <SchoolLogo />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-medium text-warm-900 truncate">{thread.name}</h1>
-              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 border ${MEETING_TYPE_COLORS[thread.type]}`}>
-                {MEETING_TYPE_LABELS[thread.type]}
-              </span>
-            </div>
-            {lastMeeting?.next_date ? (
-              <p className="text-xs text-brand mt-0.5 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Próxima: {format(parseISO(lastMeeting.next_date), "EEEE d 'de' MMMM", { locale: es })}
-              </p>
-            ) : (
-              <p className="text-xs text-warm-400 mt-0.5">Sin próxima reunión agendada</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowEdit(true)}
-              className="text-warm-400 hover:text-warm-700 p-2 rounded-lg hover:bg-warm-100 transition-colors"
-              title="Editar hilo">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => router.push('/dashboard')} className="text-warm-400 hover:text-warm-600 flex-shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
+            <div className="hidden sm:block"><SchoolLogo /></div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm sm:text-base font-medium text-warm-900 truncate">{thread.name}</h1>
+                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0 border ${MEETING_TYPE_COLORS[thread.type]}`}>
+                  {MEETING_TYPE_LABELS[thread.type]}
+                </span>
+              </div>
+              {lastMeeting?.next_date ? (
+                <p className="text-[11px] sm:text-xs text-brand mt-0.5 flex items-center gap-1">
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="truncate">Próxima: {format(parseISO(lastMeeting.next_date), "EEEE d 'de' MMMM", { locale: es })}</span>
+                </p>
+              ) : (
+                <p className="text-[11px] sm:text-xs text-warm-400 mt-0.5">Sin próxima reunión agendada</p>
+              )}
+            </div>
+            {/* Icon + text buttons */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              <button onClick={() => setShowEdit(true)}
+                className="text-warm-400 hover:text-warm-700 p-1.5 sm:p-2 rounded-lg hover:bg-warm-100 transition-colors"
+                title="Editar hilo">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button onClick={sendEmail} disabled={sendingEmail}
+                className="hidden sm:inline-flex text-sm border border-warm-200 text-warm-600 px-3 py-2 rounded-lg hover:bg-warm-50 transition-colors disabled:opacity-50">
+                {sendingEmail ? 'Enviando...' : '✉ Enviar guía'}
+              </button>
+              <Link href={`/meeting/new?thread=${id}`}
+                className="hidden sm:inline-flex text-sm bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors">
+                + Nueva reunión
+              </Link>
+              <button onClick={toggleArchive} className="text-warm-400 hover:text-warm-600 p-1.5 sm:p-2 rounded-lg hover:bg-warm-100 transition-colors" title={data?.thread.archived ? 'Reactivar hilo' : 'Archivar hilo'}>
+                {data?.thread.archived ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+          {/* Action buttons - second row on mobile only */}
+          <div className="flex items-center gap-2 mt-2 sm:hidden">
             <button onClick={sendEmail} disabled={sendingEmail}
-              className="text-sm border border-warm-200 text-warm-600 px-3 py-2 rounded-lg hover:bg-warm-50 transition-colors disabled:opacity-50">
+              className="text-xs border border-warm-200 text-warm-600 px-2.5 py-1.5 rounded-lg hover:bg-warm-50 transition-colors disabled:opacity-50 flex-1">
               {sendingEmail ? 'Enviando...' : '✉ Enviar guía'}
             </button>
             <Link href={`/meeting/new?thread=${id}`}
-              className="text-sm bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors">
+              className="text-xs bg-brand text-white px-2.5 py-1.5 rounded-lg hover:bg-brand-600 transition-colors flex-1 text-center">
               + Nueva reunión
             </Link>
-            <button onClick={toggleArchive} className="text-xs text-warm-400 hover:text-warm-600 px-2 py-2" title={data?.thread.archived ? 'Reactivar hilo' : 'Archivar hilo'}>
-              {data?.thread.archived ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-              )}
-            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-5">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-5">
 
         {/* Sin reuniones todavía */}
         {meetings.length === 0 && (
@@ -546,7 +560,7 @@ function EditThreadModal({ thread, onClose, onSaved }: {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, overflowY: 'auto', padding: '1rem' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-lg mx-auto my-8 p-6">
+      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-lg mx-auto my-4 sm:my-8 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-medium text-warm-900">Editar hilo</h2>
           <button onClick={onClose} className="text-warm-400 hover:text-warm-600">
@@ -587,7 +601,7 @@ function EditThreadModal({ thread, onClose, onSaved }: {
               placeholder="Ej: Seguimiento mensual" className="w-full text-sm" />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className="text-xs text-warm-400 block mb-1">Curso</label>
               <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="Ej: 3ro A" className="w-full text-sm" />

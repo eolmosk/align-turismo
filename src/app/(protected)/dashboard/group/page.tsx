@@ -55,27 +55,27 @@ export default function GroupDashboard() {
 
   return (
     <div className="min-h-screen bg-warm-50">
-      <header className="bg-white border-b border-warm-200 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <SchoolLogo />
-            <div>
-              <h1 className="text-base font-medium text-warm-900">Panel del grupo</h1>
-              <p className="text-xs text-warm-500 mt-0.5">
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="hidden sm:block"><SchoolLogo /></div>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-medium text-warm-900">Panel del grupo</h1>
+              <p className="text-[11px] sm:text-xs text-warm-500 mt-0.5 truncate">
                 {session?.user?.school?.group_name ?? 'Grupo de escuelas'}
               </p>
             </div>
           </div>
-          <Link href="/dashboard" className="text-sm text-warm-500 hover:text-warm-700">
+          <Link href="/dashboard" className="text-xs sm:text-sm text-warm-500 hover:text-warm-700 flex-shrink-0">
             Mi escuela →
           </Link>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20">
 
         {/* Stats generales */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {[
             { label: 'Escuelas', value: schools.length },
             { label: 'Reuniones totales', value: allMeetings.length },

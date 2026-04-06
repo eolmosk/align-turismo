@@ -188,52 +188,56 @@ export default function MeetingDetailPage() {
     <div className="min-h-screen bg-white">
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-brand text-white text-sm px-5 py-3 rounded-xl z-50 shadow-lg">
           {toast}
         </div>
       )}
 
       {/* Header */}
-      <header className="bg-white border-b border-warm-200 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
+      <header className="bg-white border-b border-warm-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-4">
           <button onClick={() => {
             if (meeting.thread_id) router.push(`/thread/${meeting.thread_id}`)
             else router.push('/dashboard')
-          }} className="text-warm-400 hover:text-warm-600">
+          }} className="text-warm-400 hover:text-warm-600 flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <SchoolLogo />
+          <div className="hidden sm:block"><SchoolLogo /></div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-medium text-warm-900 truncate">{meeting.title}</h1>
-            <p className="text-xs text-warm-500">
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-medium text-warm-900 truncate">{meeting.title}</h1>
+              <span className={`text-[10px] sm:text-xs px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full border flex-shrink-0 ${MEETING_TYPE_COLORS[meeting.type]}`}>
+                {MEETING_TYPE_LABELS[meeting.type]}
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-warm-500">
               {format(parseISO(meeting.meeting_date), "d 'de' MMMM yyyy", { locale: es })}
             </p>
           </div>
-          <span className={`text-xs px-3 py-1 rounded-full border ${MEETING_TYPE_COLORS[meeting.type]}`}>
-            {MEETING_TYPE_LABELS[meeting.type]}
-          </span>
-          <button onClick={() => setShowEdit(true)}
-            className="text-warm-400 hover:text-warm-700 p-2 rounded-lg hover:bg-warm-100 transition-colors flex-shrink-0"
-            title="Editar reunión">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          <button onClick={deleteMeeting}
-            className="text-warm-400 hover:text-brand-700 p-2 rounded-lg hover:bg-brand-50 transition-colors flex-shrink-0"
-            title="Eliminar reunión">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+            <button onClick={() => setShowEdit(true)}
+              className="text-warm-400 hover:text-warm-700 p-1.5 sm:p-2 rounded-lg hover:bg-warm-100 transition-colors"
+              title="Editar reunión">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button onClick={deleteMeeting}
+              className="text-warm-400 hover:text-brand-700 p-1.5 sm:p-2 rounded-lg hover:bg-brand-50 transition-colors"
+              title="Eliminar reunión">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-5">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 space-y-5">
 
         {/* Banner onboarding */}
         {isOnboarding && hasAI && (
@@ -535,7 +539,7 @@ export default function MeetingDetailPage() {
         {/* Integraciones Google */}
         <div className="bg-white rounded-xl border border-warm-200 p-5">
           <h2 className="text-sm font-medium text-warm-900 mb-4">Integraciones Google</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button onClick={() => handleGoogle('calendar')}
               disabled={!!googleLoading || !!aiLoading || !meeting.next_date}
               className="flex items-center gap-2 px-4 py-3 border border-warm-200 rounded-xl text-sm text-warm-700 hover:bg-warm-50 disabled:opacity-40 transition-colors">
@@ -673,7 +677,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, overflowY: 'auto', padding: '1rem' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-lg mx-auto my-8 p-6">
+      <div className="bg-white rounded-2xl border border-warm-200 w-full max-w-lg mx-auto my-4 sm:my-8 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-medium text-warm-900">Editar reunión</h2>
           <button onClick={onClose} className="text-warm-400 hover:text-warm-600">
@@ -802,7 +806,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-warm-400 block mb-1">Curso</label>
                 <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="Ej: 3ro A" className="w-full text-sm" />

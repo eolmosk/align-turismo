@@ -78,7 +78,7 @@ export default function SchoolSwitcher({
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-warm-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] sm:w-72 max-w-72 bg-white border border-warm-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
           <div className="px-3 py-2 border-b border-warm-100">
             <p className="text-[10px] font-semibold text-warm-400 uppercase tracking-wider">Cambiar escuela</p>
           </div>
