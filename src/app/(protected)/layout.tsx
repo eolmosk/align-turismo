@@ -14,5 +14,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     redirect('/pending')
   }
 
-  return <>{children}</>
+  return (
+    <div className="max-w-5xl mx-auto bg-white min-h-screen shadow-sm">
+      {children}
+    </div>
+  )
 }

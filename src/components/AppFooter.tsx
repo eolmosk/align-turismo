@@ -3,8 +3,8 @@ import { usePathname } from 'next/navigation'
 
 export default function AppFooter() {
   const pathname = usePathname()
-  // No mostrar en auth/onboarding
-  if (pathname === '/auth' || pathname === '/onboarding') return null
+  // No mostrar en landing, auth, onboarding
+  if (pathname === '/' || pathname === '/auth' || pathname === '/onboarding') return null
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-transparent py-4 px-6 z-40">

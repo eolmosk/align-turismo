@@ -15,12 +15,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=neue-montreal@300,400,500,700&display=swap" />
       </head>
       <body>
-        <div className="max-w-5xl mx-auto bg-white min-h-screen shadow-sm">
-          <SessionProvider>
-            {children}
-            <AppFooter />
-          </SessionProvider>
-        </div>
+        <SessionProvider>
+          {children}
+          <AppFooter />
+        </SessionProvider>
       </body>
     </html>
   )
