@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=neue-montreal@300,400,500,700&display=swap" />
       </head>
-      <body>
+      <body className="min-h-screen flex flex-col">
         <SessionProvider>
           {children}
           <AppFooter />
