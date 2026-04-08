@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { CreateMeetingInput } from '@/types'
+import { upsertMeetingEmbedding } from '@/lib/embeddings'
 
 // GET /api/meetings — lista reuniones de la escuela del usuario
 export async function GET(req: NextRequest) {
@@ -87,6 +88,11 @@ export async function POST(req: NextRequest) {
       .from('threads')
       .update({ last_meeting_at: new Date().toISOString() })
       .eq('id', body.thread_id)
+  }
+
+  // Generar embedding para búsqueda semántica (fire-and-forget, no bloquea)
+  if (data?.id) {
+    upsertMeetingEmbedding(data.id).catch(() => { /* logged inside */ })
   }
 
   return NextResponse.json(data, { status: 201 })

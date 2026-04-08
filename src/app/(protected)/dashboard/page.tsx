@@ -42,7 +42,7 @@ interface StatsData {
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [tab, setTab] = useState<'hoy' | 'hilos' | 'reuniones' | 'pendientes' | 'stats'>('hoy')
+  const [tab, setTab] = useState<'hoy' | 'hilos' | 'reuniones' | 'pendientes' | 'preguntar' | 'stats'>('hoy')
 
   // Hoy (inbox)
   const [inbox, setInbox] = useState<any>(null)
@@ -257,12 +257,12 @@ export default function Dashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-warm-100 px-4 sm:px-6 overflow-x-auto">
         <div className="max-w-4xl mx-auto flex gap-3 sm:gap-6 min-w-max">
-          {(['hoy', 'hilos', 'reuniones', 'pendientes', 'stats'] as const).map(t => (
+          {(['hoy', 'hilos', 'reuniones', 'pendientes', 'preguntar', 'stats'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-sm py-3 border-b-2 transition-colors whitespace-nowrap ${
                 tab === t ? 'border-brand text-warm-900 font-medium' : 'border-transparent text-warm-500 hover:text-warm-700'
               }`}>
-              {t === 'hoy' ? 'Hoy' : t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : t === 'pendientes' ? 'Pendientes' : 'Estadísticas'}
+              {t === 'hoy' ? 'Hoy' : t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : t === 'pendientes' ? 'Pendientes' : t === 'preguntar' ? 'Preguntar' : 'Estadísticas'}
               {t === 'pendientes' && totalPending > 0 && (
                 <span className="ml-2 bg-brand text-white text-xs px-1.5 py-0.5 rounded-full">{totalPending}</span>
               )}
@@ -326,6 +326,7 @@ export default function Dashboard() {
             }}
           />
         )}
+        {tab === 'preguntar' && <AskTab />}
         {tab === 'stats' && <StatsTab stats={stats} loading={loadingStats} />}
       </main>
 
@@ -1253,6 +1254,119 @@ function HoyTab({ inbox, loading, directorName, filter, onFilterChange }: {
           </>
         )}
       </section>
+    </div>
+  )
+}
+
+// ─── Tab: Preguntar ───────────────────────────────────────────────────────────
+
+function AskTab() {
+  const [question, setQuestion] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [answer, setAnswer] = useState<string | null>(null)
+  const [sources, setSources] = useState<Array<{ id: string; title: string; meeting_date: string; type: string; threadName: string | null }>>([])
+  const [error, setError] = useState<string | null>(null)
+
+  const suggestions = [
+    '¿Qué dijimos sobre la familia García?',
+    '¿Qué compromisos quedaron pendientes con 5° grado?',
+    '¿Qué temas recurrentes aparecen en reuniones con padres?',
+  ]
+
+  async function handleAsk(q?: string) {
+    const query = (q ?? question).trim()
+    if (!query) return
+    setLoading(true)
+    setError(null)
+    setAnswer(null)
+    setSources([])
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: query }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error')
+      setAnswer(data.answer)
+      setSources(data.sources ?? [])
+      if (q) setQuestion(q)
+    } catch (e: any) {
+      setError(e.message ?? 'Error consultando')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-warm-900 mb-2">Preguntá sobre tus reuniones</h2>
+        <p className="text-warm-600 text-sm">Busco semánticamente en el historial y te respondo citando las reuniones relevantes.</p>
+      </div>
+
+      <div className="bg-white border border-warm-200 rounded-xl p-4">
+        <textarea
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAsk() }}
+          placeholder="Ej: ¿qué pasó con el caso de bullying de 6°?"
+          rows={3}
+          maxLength={500}
+          className="w-full resize-none border-0 focus:outline-none text-warm-900 placeholder:text-warm-400"
+        />
+        <div className="flex items-center justify-between pt-2 border-t border-warm-100">
+          <span className="text-xs text-warm-400">{question.length}/500 · Ctrl+Enter para enviar</span>
+          <button
+            onClick={() => handleAsk()}
+            disabled={loading || !question.trim()}
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+          >
+            {loading ? 'Pensando…' : 'Preguntar'}
+          </button>
+        </div>
+      </div>
+
+      {!answer && !loading && !error && (
+        <div className="space-y-2">
+          <p className="text-xs text-warm-500 uppercase tracking-wide">Ejemplos</p>
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              onClick={() => handleAsk(s)}
+              className="block w-full text-left px-3 py-2 text-sm text-warm-700 hover:bg-warm-100 rounded-lg border border-warm-200"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
+
+      {answer && (
+        <div className="bg-white border border-warm-200 rounded-xl p-5 space-y-4">
+          <div className="prose prose-sm max-w-none text-warm-900 whitespace-pre-wrap">{answer}</div>
+          {sources.length > 0 && (
+            <div className="pt-4 border-t border-warm-100">
+              <p className="text-xs text-warm-500 uppercase tracking-wide mb-2">Reuniones citadas</p>
+              <div className="space-y-2">
+                {sources.map((s, i) => (
+                  <Link
+                    key={s.id}
+                    href={`/meeting/${s.id}`}
+                    className="block px-3 py-2 text-sm hover:bg-warm-50 rounded-lg border border-warm-200"
+                  >
+                    <span className="text-warm-500 mr-2">[Reunión {i + 1}]</span>
+                    <span className="font-medium text-warm-900">{s.title}</span>
+                    <span className="text-warm-500 ml-2">· {s.meeting_date}{s.threadName ? ` · ${s.threadName}` : ''}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

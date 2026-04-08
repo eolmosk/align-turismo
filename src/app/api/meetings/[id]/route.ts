@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { upsertMeetingEmbedding } from '@/lib/embeddings'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -52,6 +53,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         contact_ids.map((contact_id: string) => ({ meeting_id: params.id, contact_id }))
       )
     }
+  }
+
+  // Refrescar embedding si cambió contenido relevante
+  const contentFields = ['title', 'notes', 'ai_summary', 'ai_questions', 'ai_commitments', 'participants', 'type']
+  if (contentFields.some((f) => f in meetingFields)) {
+    upsertMeetingEmbedding(params.id).catch(() => { /* logged inside */ })
   }
 
   return NextResponse.json(data)
