@@ -3,14 +3,16 @@
 // para assets estáticos. NO cacheamos respuestas de la API (siempre
 // network) para no mostrar datos viejos de reuniones/acciones.
 
-const CACHE_VERSION = 'align-v1'
+const CACHE_VERSION = 'align-v2'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 
 // Assets que queremos precachear (el resto entra on-demand).
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
-  '/icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
 ]
 
 self.addEventListener('install', (event) => {
