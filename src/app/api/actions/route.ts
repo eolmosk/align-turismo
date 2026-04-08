@@ -1,59 +1,78 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
-// GET /api/actions — todos los pendientes de la escuela, agrupados por hilo
-export async function GET() {
+// GET /api/actions?filter=all|mine|unassigned (default: all)
+// Pendientes de la escuela, agrupados por hilo, con info de assignee.
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.school_id) {
+  if (!session?.user?.school_id || !session.user.id) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  // Traer todas las reuniones con sus acciones y datos de hilo
+  const filter = (req.nextUrl.searchParams.get('filter') ?? 'all') as 'all' | 'mine' | 'unassigned'
+  const myUserId = session.user.id
+
   const { data: meetings, error } = await supabaseAdmin
     .from('meetings')
     .select(`
       id, title, meeting_date, thread_id,
       thread:threads(id, name, type),
-      meeting_actions(id, text, done, created_at)
+      meeting_actions(
+        id, text, done, created_at,
+        assigned_to, assigned_user_id, assigned_contact_id,
+        assigned_user:users!assigned_user_id(id, name, email),
+        assigned_contact:contacts!assigned_contact_id(id, name)
+      )
     `)
     .eq('school_id', session.user.school_id)
     .order('meeting_date', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Aplanar acciones pendientes con contexto de hilo y reunión
-  const pendingByThread: Record<string, {
-    thread: { id: string; name: string; type: string }
-    actions: { id: string; text: string; assigned_to: string | null; meeting_id: string; meeting_title: string; meeting_date: string }[]
-  }> = {}
+  const pendingByThread: Record<string, any> = {}
+  const counts = { all: 0, mine: 0, unassigned: 0 }
 
   for (const meeting of meetings ?? []) {
-    const thread = meeting.thread as any
+    const thread = (meeting as any).thread
     if (!thread) continue
-    const actions = (meeting.meeting_actions as any[] ?? []).filter(a => !a.done)
-    if (actions.length === 0) continue
+    const acts = ((meeting as any).meeting_actions ?? []).filter((a: any) => !a.done)
 
-    if (!pendingByThread[thread.id]) {
-      pendingByThread[thread.id] = { thread, actions: [] }
-    }
-    for (const action of actions) {
+    for (const a of acts) {
+      const isMine = a.assigned_user_id === myUserId
+      const isUnassigned = !a.assigned_user_id && !a.assigned_contact_id && !a.assigned_to
+      counts.all++
+      if (isMine) counts.mine++
+      if (isUnassigned) counts.unassigned++
+
+      // Aplicar filtro
+      if (filter === 'mine' && !isMine) continue
+      if (filter === 'unassigned' && !isUnassigned) continue
+
+      if (!pendingByThread[thread.id]) {
+        pendingByThread[thread.id] = { thread, actions: [] }
+      }
       pendingByThread[thread.id].actions.push({
-        id: action.id,
-        text: action.text,
-        assigned_to: action.assigned_to ?? null,
-        meeting_id: meeting.id,
-        meeting_title: meeting.title,
-        meeting_date: meeting.meeting_date,
+        id: a.id,
+        text: a.text,
+        assigned_to: a.assigned_to ?? null,
+        assigned_user_id: a.assigned_user_id ?? null,
+        assigned_contact_id: a.assigned_contact_id ?? null,
+        assigned_user: a.assigned_user ?? null,
+        assigned_contact: a.assigned_contact ?? null,
+        isMine,
+        isUnassigned,
+        meeting_id: (meeting as any).id,
+        meeting_title: (meeting as any).title,
+        meeting_date: (meeting as any).meeting_date,
       })
     }
   }
 
-  // Convertir a array ordenado por cantidad de pendientes desc
-  const result = Object.values(pendingByThread).sort(
-    (a, b) => b.actions.length - a.actions.length
+  const groups = Object.values(pendingByThread).sort(
+    (a: any, b: any) => b.actions.length - a.actions.length
   )
 
-  return NextResponse.json(result)
+  return NextResponse.json({ groups, counts })
 }

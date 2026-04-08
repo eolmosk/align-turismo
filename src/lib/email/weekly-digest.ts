@@ -33,6 +33,9 @@ export interface DigestData {
     text: string
     meetingTitle: string
     meetingId: string
+    isMine: boolean
+    isUnassigned: boolean
+    assigneeName: string | null
   }>
   unprocessedMeetings: Array<{
     id: string
@@ -42,6 +45,8 @@ export interface DigestData {
   totals: {
     upcoming: number
     pending: number
+    pendingMine: number
+    pendingUnassigned: number
     unprocessed: number
   }
 }
@@ -49,7 +54,12 @@ export interface DigestData {
 /**
  * Junta los datos del digest semanal para un usuario.
  */
-export async function buildDigestData(userId: string, appUrl: string): Promise<DigestData | null> {
+export async function buildDigestData(
+  userId: string,
+  appUrl: string,
+  opts: { actionsFilter?: 'all' | 'mine' } = {}
+): Promise<DigestData | null> {
+  const actionsFilter = opts.actionsFilter ?? 'mine'
   const { data: user } = await supabaseAdmin
     .from('users')
     .select('id, name, email, school_id')
@@ -76,27 +86,50 @@ export async function buildDigestData(userId: string, appUrl: string): Promise<D
     .lte('next_date', weekEndIso)
     .order('next_date', { ascending: true })
 
-  // 2) Acciones pendientes — todas las del usuario
+  // 2) Acciones pendientes — de toda la escuela, con assignee info
   const { data: meetingsWithActions = [] } = await supabaseAdmin
     .from('meetings')
-    .select('id, title, meeting_actions(id, text, done)')
-    .eq('user_id', userId)
+    .select(`
+      id, title, meeting_date,
+      meeting_actions(
+        id, text, done,
+        assigned_to, assigned_user_id, assigned_contact_id,
+        assigned_user:users!assigned_user_id(name),
+        assigned_contact:contacts!assigned_contact_id(name)
+      )
+    `)
+    .eq('school_id', user.school_id)
     .order('meeting_date', { ascending: false })
 
-  const pendingActions: DigestData['pendingActions'] = []
+  const allPending: DigestData['pendingActions'] = []
+  let pendingMineCount = 0
+  let pendingUnassignedCount = 0
+
   for (const m of meetingsWithActions ?? []) {
-    const acts = ((m as any).meeting_actions ?? []) as Array<{ id: string; text: string; done: boolean }>
+    const acts = ((m as any).meeting_actions ?? []) as any[]
     for (const a of acts) {
-      if (!a.done) {
-        pendingActions.push({
-          id: a.id,
-          text: a.text,
-          meetingTitle: (m as any).title,
-          meetingId: (m as any).id,
-        })
-      }
+      if (a.done) continue
+      const isMine = a.assigned_user_id === userId
+      const isUnassigned = !a.assigned_user_id && !a.assigned_contact_id && !a.assigned_to
+      if (isMine) pendingMineCount++
+      if (isUnassigned) pendingUnassignedCount++
+      const assigneeName =
+        a.assigned_user?.name ?? a.assigned_contact?.name ?? a.assigned_to ?? null
+      allPending.push({
+        id: a.id,
+        text: a.text,
+        meetingTitle: (m as any).title,
+        meetingId: (m as any).id,
+        isMine,
+        isUnassigned,
+        assigneeName,
+      })
     }
   }
+
+  const pendingActions = actionsFilter === 'mine'
+    ? allPending.filter((a) => a.isMine)
+    : allPending
 
   // 3) Reuniones sin procesar con IA en los últimos 14 días
   const { data: unprocessed = [] } = await supabaseAdmin
@@ -131,6 +164,8 @@ export async function buildDigestData(userId: string, appUrl: string): Promise<D
     totals: {
       upcoming: upcoming?.length ?? 0,
       pending: pendingActions.length,
+      pendingMine: pendingMineCount,
+      pendingUnassigned: pendingUnassignedCount,
       unprocessed: unprocessed?.length ?? 0,
     },
   }

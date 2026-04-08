@@ -6,6 +6,7 @@ import { Meeting, MEETING_TYPE_LABELS, MEETING_TYPE_DOT, MEETING_TYPE_COLORS, Me
 import ContactSelector from '@/components/ContactSelector'
 import SchoolSwitcher from '@/components/SchoolSwitcher'
 import SchoolLogo from '@/components/SchoolLogo'
+import AssigneePicker from '@/components/AssigneePicker'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
@@ -41,7 +42,13 @@ interface StatsData {
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [tab, setTab] = useState<'hilos' | 'reuniones' | 'pendientes' | 'stats'>('hilos')
+  const [tab, setTab] = useState<'hoy' | 'hilos' | 'reuniones' | 'pendientes' | 'stats'>('hoy')
+
+  // Hoy (inbox)
+  const [inbox, setInbox] = useState<any>(null)
+  const [loadingInbox, setLoadingInbox] = useState(false)
+  const [inboxLoaded, setInboxLoaded] = useState(false)
+  const [inboxFilter, setInboxFilter] = useState<'mine' | 'all'>('mine')
 
   // Hilos
   const [threads, setThreads] = useState<ThreadSummary[]>([])
@@ -62,6 +69,8 @@ export default function Dashboard() {
 
   // Pendientes
   const [pendingGroups, setPendingGroups] = useState<any[]>([])
+  const [pendingCounts, setPendingCounts] = useState<{ all: number; mine: number; unassigned: number }>({ all: 0, mine: 0, unassigned: 0 })
+  const [pendingFilter, setPendingFilter] = useState<'all' | 'mine' | 'unassigned'>('all')
   const [loadingPending, setLoadingPending] = useState(false)
   const [pendingLoaded, setPendingLoaded] = useState(false)
 
@@ -88,8 +97,45 @@ export default function Dashboard() {
       .catch(() => { setLoadingThreads(false); setError('Error cargando los datos. Recargá la página.') })
   }, [session])
 
+  // Refetch pendientes al cambiar el filtro
+  const reloadPending = () => {
+    setLoadingPending(true)
+    fetch(`/api/actions?filter=${pendingFilter}`)
+      .then(r => r.json())
+      .then(data => {
+        setPendingGroups(Array.isArray(data?.groups) ? data.groups : [])
+        if (data?.counts) setPendingCounts(data.counts)
+        setPendingLoaded(true); setLoadingPending(false)
+      })
+      .catch(() => setLoadingPending(false))
+  }
+
+  useEffect(() => {
+    if (tab === 'pendientes' && pendingLoaded) reloadPending()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingFilter])
+
+  // Refetch Hoy al cambiar filtro
+  useEffect(() => {
+    if (tab === 'hoy' && inboxLoaded) {
+      setLoadingInbox(true)
+      fetch(`/api/inbox?filter=${inboxFilter}`)
+        .then(r => r.json())
+        .then(data => { setInbox(data); setLoadingInbox(false) })
+        .catch(() => setLoadingInbox(false))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inboxFilter])
+
   // Carga lazy por tab
   useEffect(() => {
+    if (tab === 'hoy' && !inboxLoaded) {
+      setLoadingInbox(true)
+      fetch(`/api/inbox?filter=${inboxFilter}`)
+        .then(r => r.json())
+        .then(data => { setInbox(data); setInboxLoaded(true); setLoadingInbox(false) })
+        .catch(() => setLoadingInbox(false))
+    }
     if (tab === 'reuniones' && !meetingsLoaded) {
       setLoadingMeetings(true)
       fetch('/api/meetings?limit=200')
@@ -99,9 +145,13 @@ export default function Dashboard() {
     }
     if (tab === 'pendientes' && !pendingLoaded) {
       setLoadingPending(true)
-      fetch('/api/actions')
+      fetch(`/api/actions?filter=${pendingFilter}`)
         .then(r => r.json())
-        .then(data => { setPendingGroups(Array.isArray(data) ? data : []); setPendingLoaded(true); setLoadingPending(false) })
+        .then(data => {
+          setPendingGroups(Array.isArray(data?.groups) ? data.groups : [])
+          if (data?.counts) setPendingCounts(data.counts)
+          setPendingLoaded(true); setLoadingPending(false)
+        })
         .catch(() => setLoadingPending(false))
     }
     if (tab === 'stats' && !statsLoaded) {
@@ -207,15 +257,12 @@ export default function Dashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-warm-100 px-4 sm:px-6 overflow-x-auto">
         <div className="max-w-4xl mx-auto flex gap-3 sm:gap-6 min-w-max">
-          {(['hilos', 'reuniones', 'pendientes', 'stats'] as const).map(t => (
+          {(['hoy', 'hilos', 'reuniones', 'pendientes', 'stats'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-sm py-3 border-b-2 transition-colors whitespace-nowrap ${
                 tab === t ? 'border-brand text-warm-900 font-medium' : 'border-transparent text-warm-500 hover:text-warm-700'
               }`}>
-              {t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : t === 'pendientes' ? 'Pendientes' : 'Estadísticas'}
-              {t === 'hilos' && totalPending > 0 && (
-                <span className="ml-2 bg-brand text-white text-xs px-1.5 py-0.5 rounded-full">{totalPending}</span>
-              )}
+              {t === 'hoy' ? 'Hoy' : t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : t === 'pendientes' ? 'Pendientes' : 'Estadísticas'}
               {t === 'pendientes' && totalPending > 0 && (
                 <span className="ml-2 bg-brand text-white text-xs px-1.5 py-0.5 rounded-full">{totalPending}</span>
               )}
@@ -225,6 +272,15 @@ export default function Dashboard() {
       </div>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-8">
+        {tab === 'hoy' && (
+          <HoyTab
+            inbox={inbox}
+            loading={loadingInbox}
+            directorName={session?.user?.name ?? session?.user?.email ?? ''}
+            filter={inboxFilter}
+            onFilterChange={setInboxFilter}
+          />
+        )}
         {tab === 'hilos' && <HilosTab threads={threads} onNewThread={() => setShowNewThread(true)} onUnarchive={() => {
           fetch('/api/threads').then(r => r.json()).then(data => { setThreads(Array.isArray(data) ? data : []) })
         }} />}
@@ -242,19 +298,31 @@ export default function Dashboard() {
         {tab === 'pendientes' && (
           <PendientesTab
             groups={pendingGroups}
+            counts={pendingCounts}
+            filter={pendingFilter}
+            onFilterChange={setPendingFilter}
             loading={loadingPending}
+            currentUserId={session?.user?.id ?? ''}
             onToggle={async (meetingId, actionId) => {
               await fetch(`/api/meetings/${meetingId}/actions/${actionId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ done: true }),
               })
-              // Refrescar
-              setLoadingPending(true)
-              setPendingLoaded(false)
-              fetch('/api/actions')
-                .then(r => r.json())
-                .then(data => { setPendingGroups(Array.isArray(data) ? data : []); setPendingLoaded(true); setLoadingPending(false) })
+              reloadPending()
+            }}
+            onAssign={async (meetingId, actionId, value) => {
+              await fetch(`/api/meetings/${meetingId}/actions/${actionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  assigned_user_id: value.userId,
+                  assigned_contact_id: value.contactId,
+                  // Limpiar texto libre legacy cuando se asigna estructuralmente
+                  assigned_to: value.userId || value.contactId ? null : undefined,
+                }),
+              })
+              reloadPending()
             }}
           />
         )}
@@ -740,77 +808,133 @@ function StatsTab({ stats, loading }: { stats: StatsData | null; loading: boolea
 // ─── Tab pendientes ───────────────────────────────────────────────────────────
 
 function PendientesTab({
-  groups, loading, onToggle
+  groups, counts, filter, onFilterChange, loading, currentUserId, onToggle, onAssign
 }: {
   groups: any[]
+  counts: { all: number; mine: number; unassigned: number }
+  filter: 'all' | 'mine' | 'unassigned'
+  onFilterChange: (f: 'all' | 'mine' | 'unassigned') => void
   loading: boolean
+  currentUserId: string
   onToggle: (meetingId: string, actionId: string) => void
+  onAssign: (meetingId: string, actionId: string, value: { userId: string | null; contactId: string | null }) => Promise<void>
 }) {
-  if (loading) return (
-    <div className="flex justify-center py-16">
-      <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
-    </div>
-  )
+  const [pickerFor, setPickerFor] = useState<{ meetingId: string; action: any } | null>(null)
 
-  if (groups.length === 0) return (
-    <div className="bg-white rounded-xl border border-warm-200 p-10 text-center">
-      <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3">
-        <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-      <p className="text-sm font-medium text-warm-900">Todo al día</p>
-      <p className="text-sm text-warm-400 mt-1">No hay acciones pendientes en ningún hilo.</p>
-    </div>
-  )
-
-  const totalActions = groups.reduce((s, g) => s + g.actions.length, 0)
+  const filterTabs: Array<{ id: 'all' | 'mine' | 'unassigned'; label: string; count: number }> = [
+    { id: 'all', label: 'Todas', count: counts.all },
+    { id: 'mine', label: 'Mías', count: counts.mine },
+    { id: 'unassigned', label: 'Sin asignar', count: counts.unassigned },
+  ]
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-warm-500">
-        {totalActions} acción{totalActions !== 1 ? 'es' : ''} pendiente{totalActions !== 1 ? 's' : ''} en {groups.length} hilo{groups.length !== 1 ? 's' : ''}
-      </p>
-      {groups.map((group) => (
-        <div key={group.thread.id} className="bg-white rounded-xl border border-warm-200 overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-warm-100 flex items-center justify-between">
-            <Link href={`/thread/${group.thread.id}`}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <span className="text-sm font-medium text-warm-900">{group.thread.name}</span>
-              <svg className="w-3.5 h-3.5 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <span className="text-xs bg-brand-100 text-brand-600 px-2 py-0.5 rounded-full">
-              {group.actions.length} pendiente{group.actions.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="divide-y divide-warm-50">
-            {group.actions.map((action: any) => (
-              <div key={action.id} className="flex items-start gap-3 px-5 py-3.5">
-                <button
-                  onClick={() => onToggle(action.meeting_id, action.id)}
-                  className="w-4 h-4 mt-0.5 rounded border border-warm-300 hover:border-brand hover:bg-brand-50 flex items-center justify-center flex-shrink-0 transition-colors"
-                  title="Marcar como hecho">
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-warm-800">{action.text}</p>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <p className="text-xs text-warm-400">
-                      {action.meeting_title} · {format(parseISO(action.meeting_date), "d MMM yyyy", { locale: es })}
-                    </p>
-                    {action.assigned_to && (
-                      <span className="text-xs bg-warm-100 text-warm-600 px-2 py-0.5 rounded-full">
-                        {action.assigned_to}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Sub-filtros */}
+      <div className="flex gap-2 flex-wrap">
+        {filterTabs.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => onFilterChange(f.id)}
+            className={`text-sm px-4 py-2 rounded-full border transition-colors ${
+              filter === f.id
+                ? 'bg-brand text-white border-brand'
+                : 'border-warm-200 text-warm-600 hover:border-warm-300'
+            }`}>
+            {f.label}
+            <span className={`ml-2 text-xs ${filter === f.id ? 'opacity-80' : 'text-warm-400'}`}>{f.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
         </div>
-      ))}
+      ) : groups.length === 0 ? (
+        <div className="bg-white rounded-xl border border-warm-200 p-10 text-center">
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3">
+            <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-warm-900">
+            {filter === 'mine' ? 'No tenés pendientes asignados a vos' :
+             filter === 'unassigned' ? 'Todas las acciones tienen responsable' :
+             'Todo al día'}
+          </p>
+          <p className="text-sm text-warm-400 mt-1">
+            {filter === 'all' ? 'No hay acciones pendientes en ningún hilo.' : ''}
+          </p>
+        </div>
+      ) : (
+        groups.map((group) => (
+          <div key={group.thread.id} className="bg-white rounded-xl border border-warm-200 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-warm-100 flex items-center justify-between">
+              <Link href={`/thread/${group.thread.id}`}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span className="text-sm font-medium text-warm-900">{group.thread.name}</span>
+                <svg className="w-3.5 h-3.5 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <span className="text-xs bg-brand-100 text-brand-600 px-2 py-0.5 rounded-full">
+                {group.actions.length} pendiente{group.actions.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="divide-y divide-warm-50">
+              {group.actions.map((action: any) => {
+                const assigneeName = action.assigned_user?.name ?? action.assigned_user?.email
+                  ?? action.assigned_contact?.name ?? action.assigned_to ?? null
+                const isMine = action.isMine
+                const isUnassigned = action.isUnassigned
+                return (
+                  <div
+                    key={action.id}
+                    className={`flex items-start gap-3 px-5 py-3.5 ${isMine ? 'bg-brand-50/40' : ''}`}
+                  >
+                    <button
+                      onClick={() => onToggle(action.meeting_id, action.id)}
+                      className="w-4 h-4 mt-0.5 rounded border border-warm-300 hover:border-brand hover:bg-brand-50 flex items-center justify-center flex-shrink-0 transition-colors"
+                      title="Marcar como hecho">
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-warm-800">{action.text}</p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <p className="text-xs text-warm-400">
+                          {action.meeting_title} · {format(parseISO(action.meeting_date), "d MMM yyyy", { locale: es })}
+                        </p>
+                        <button
+                          onClick={() => setPickerFor({ meetingId: action.meeting_id, action })}
+                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                            isUnassigned
+                              ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                              : isMine
+                              ? 'bg-brand text-white border-brand hover:opacity-90'
+                              : 'bg-warm-100 text-warm-700 border-warm-200 hover:bg-warm-200'
+                          }`}
+                        >
+                          {isUnassigned ? '⚠ Sin asignar' : `${isMine ? '● ' : '✓ '}${assigneeName}`}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))
+      )}
+
+      {pickerFor && (
+        <AssigneePicker
+          currentUserId={pickerFor.action.assigned_user_id ?? null}
+          currentContactId={pickerFor.action.assigned_contact_id ?? null}
+          onSelect={async (value) => {
+            await onAssign(pickerFor.meetingId, pickerFor.action.id, value)
+          }}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
     </div>
   )
 }
@@ -955,6 +1079,180 @@ function NewThreadModal({ onClose, onCreated }: {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Tab: Hoy (bandeja del director) ──────────────────────────────────────────
+
+function HoyTab({ inbox, loading, directorName, filter, onFilterChange }: {
+  inbox: any
+  loading: boolean
+  directorName: string
+  filter: 'mine' | 'all'
+  onFilterChange: (f: 'mine' | 'all') => void
+}) {
+  if (loading || !inbox) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const { upcomingMeetings = [], pendingActions = [], unprocessedMeetings = [], totals = {} } = inbox
+  const isEmpty = !upcomingMeetings.length && !pendingActions.length && !unprocessedMeetings.length
+  const firstName = directorName.split(' ')[0]
+
+  const fmtDate = (iso: string) => {
+    const [y, m, d] = iso.split('-').map(Number)
+    return format(new Date(y, m - 1, d), "EEE d 'de' MMM", { locale: es })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Saludo */}
+      <div>
+        <h2 className="text-xl font-medium text-warm-900">Hola {firstName} 👋</h2>
+        <p className="text-sm text-warm-500 mt-1">
+          {isEmpty
+            ? 'Tu semana arranca limpia. Nada urgente por mirar.'
+            : 'Esto es lo que tenés esta semana.'}
+        </p>
+      </div>
+
+      {/* Stats mini */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white rounded-xl border border-warm-200 p-4">
+          <p className="text-2xl font-medium text-warm-900">{totals.upcoming ?? 0}</p>
+          <p className="text-xs text-warm-500 mt-0.5">Reuniones</p>
+        </div>
+        <div className="bg-white rounded-xl border border-warm-200 p-4">
+          <p className="text-2xl font-medium text-warm-900">{totals.unprocessed ?? 0}</p>
+          <p className="text-xs text-warm-500 mt-0.5">Sin IA</p>
+        </div>
+        <div className="bg-white rounded-xl border border-warm-200 p-4">
+          <p className="text-2xl font-medium text-brand-700">{totals.pending ?? 0}</p>
+          <p className="text-xs text-warm-500 mt-0.5">Pendientes</p>
+        </div>
+      </div>
+
+      {/* Reuniones esta semana */}
+      {upcomingMeetings.length > 0 && (
+        <section>
+          <h3 className="text-xs font-medium text-warm-500 uppercase tracking-wide mb-3">
+            Reuniones esta semana
+          </h3>
+          <div className="bg-white rounded-xl border border-warm-200 divide-y divide-warm-100">
+            {upcomingMeetings.map((m: any) => (
+              <Link key={m.id} href={`/meeting/${m.id}`}
+                className="flex items-center gap-4 px-5 py-4 hover:bg-warm-50 transition-colors">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${MEETING_TYPE_DOT[m.type as MeetingType] ?? 'bg-warm-300'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-warm-900 truncate">{m.title}</p>
+                  <p className="text-xs text-warm-500 mt-0.5">
+                    {fmtDate(m.next_date)}
+                    {m.next_time ? ` · ${m.next_time.slice(0, 5)}` : ''}
+                    {m.threadName ? ` · ${m.threadName}` : ''}
+                  </p>
+                </div>
+                <svg className="w-4 h-4 text-warm-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Sin procesar con IA */}
+      {unprocessedMeetings.length > 0 && (
+        <section>
+          <h3 className="text-xs font-medium text-warm-500 uppercase tracking-wide mb-3">
+            Reuniones sin procesar con IA
+          </h3>
+          <div className="bg-white rounded-xl border border-warm-200 divide-y divide-warm-100">
+            {unprocessedMeetings.map((m: any) => (
+              <Link key={m.id} href={`/meeting/${m.id}`}
+                className="flex items-center gap-4 px-5 py-4 hover:bg-warm-50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-warm-900 truncate">{m.title}</p>
+                  <p className="text-xs text-warm-500 mt-0.5">{fmtDate(m.meeting_date)}</p>
+                </div>
+                <span className="text-xs text-brand-600 flex-shrink-0">Procesar →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Pendientes */}
+      <section>
+        <div className="flex items-end justify-between mb-3 gap-3 flex-wrap">
+          <h3 className="text-xs font-medium text-warm-500 uppercase tracking-wide">
+            Acciones pendientes
+          </h3>
+          <div className="flex gap-1 bg-warm-100 rounded-full p-0.5">
+            <button
+              onClick={() => onFilterChange('mine')}
+              className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                filter === 'mine' ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500'
+              }`}
+            >
+              Mías {filter === 'mine' ? `(${totals.pending ?? 0})` : ''}
+            </button>
+            <button
+              onClick={() => onFilterChange('all')}
+              className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                filter === 'all' ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500'
+              }`}
+            >
+              Todas {filter === 'all' ? `(${totals.pending ?? 0})` : ''}
+            </button>
+          </div>
+        </div>
+
+        {pendingActions.length === 0 ? (
+          <div className="bg-white rounded-xl border border-warm-200 p-8 text-center">
+            <p className="text-sm text-warm-500">
+              {filter === 'mine' ? 'No tenés pendientes asignados a vos.' : 'No hay acciones pendientes.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {totals.pending > pendingActions.length && (
+              <p className="text-xs text-warm-400 mb-2">
+                Mostrando {pendingActions.length} de {totals.pending}
+              </p>
+            )}
+            <div className="bg-white rounded-xl border border-warm-200 divide-y divide-warm-100">
+              {pendingActions.map((a: any) => (
+                <Link key={a.id} href={`/meeting/${a.meetingId}`}
+                  className={`flex items-start gap-3 px-5 py-3 transition-colors ${
+                    a.isMine ? 'bg-brand-50/40 hover:bg-brand-50' : 'hover:bg-warm-50'
+                  }`}>
+                  <div className="w-4 h-4 border-2 border-warm-300 rounded mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-warm-900">{a.text}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <p className="text-xs text-warm-400 truncate">{a.meetingTitle}</p>
+                      {a.isUnassigned ? (
+                        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          ⚠ Sin asignar
+                        </span>
+                      ) : a.isMine ? (
+                        <span className="text-xs text-brand font-medium">● Para vos</span>
+                      ) : a.assigneeName ? (
+                        <span className="text-xs text-warm-500">✓ {a.assigneeName}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
     </div>
   )
 }

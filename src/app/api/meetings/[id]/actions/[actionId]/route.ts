@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.school_id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-  const { done, assigned_to, text } = await req.json()
+  const { done, assigned_to, assigned_user_id, assigned_contact_id, text } = await req.json()
 
   // Verify the parent meeting belongs to the user's school
   const { data: meeting } = await supabaseAdmin
@@ -23,6 +23,8 @@ export async function PATCH(
   const updates: Record<string, any> = {}
   if (done !== undefined) { updates.done = done; updates.done_at = done ? new Date().toISOString() : null }
   if (assigned_to !== undefined) updates.assigned_to = assigned_to
+  if (assigned_user_id !== undefined) updates.assigned_user_id = assigned_user_id
+  if (assigned_contact_id !== undefined) updates.assigned_contact_id = assigned_contact_id
   if (text !== undefined) updates.text = text.trim()
 
   const { data, error } = await supabaseAdmin
