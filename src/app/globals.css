@@ -7,6 +7,18 @@
     box-sizing: border-box;
   }
 
+  /* Tamaño base. En mobile subimos el base a 17px para que los text-xs
+     (12px×0.75=9px → 12.75px) y text-sm (14px×0.75=10.5px → ~14.875px)
+     escalen proporcionalmente y sean cómodos de leer en celular. */
+  html {
+    font-size: 17px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
   body {
     @apply text-warm-900;
     background-color: #FAFAFA;

@@ -33,12 +33,14 @@
     {
       "name": "Nueva reunión",
       "short_name": "Nueva",
-      "url": "/meeting/new"
+      "url": "/meeting/new",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Hoy",
       "short_name": "Hoy",
-      "url": "/dashboard"
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
     }
   ]
 }
