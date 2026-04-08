@@ -1,5 +1,5 @@
 export type MeetingType = 'docentes' | 'padres' | 'individual' | 'direccion'
-export type InputMethod = 'text' | 'voice' | 'file'
+export type InputMethod = 'text' | 'voice' | 'file' | 'audio'
 export type UserRole = 'owner' | 'director' | 'vicedirector' | 'coordinador' | 'docente' | 'administrativo' | 'pending'
 export type UserStatus = 'active' | 'pending' | 'rejected'
 export type MeetingTopic = 'pedagógico' | 'disciplinario' | 'familiar' | 'institucional' | 'curricular' | 'administrativo'

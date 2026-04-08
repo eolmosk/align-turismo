@@ -44,7 +44,12 @@ Entrás desde el Dashboard o desde `/thread/[id]`. Ves:
 ### 3.1 Crear una reunión
 1. **+ Nueva reunión** desde el Dashboard o desde un hilo.
 2. Completar: título, fecha, tipo (pedagógica, disciplinaria, familia, administrativa, etc.), participantes.
-3. Agregar el contenido: podés **escribir la minuta**, **pegar texto**, o **subir un audio** para transcripción.
+3. Agregar el contenido. Modos disponibles:
+   - **Texto** — escribí o pegá la minuta.
+   - **Dictado** — dictás y el navegador transcribe en vivo (gratis, solo Chrome).
+   - **Archivo** — subís un `.txt` o `.pdf`.
+   - **Audio HD** — grabás con el micrófono del celular/PC y al detener se transcribe con Whisper (más preciso, soporta español rioplatense, funciona en Safari/iOS). Límite 25 MB (~25 min).
+   - **En vivo** — grabación durante la reunión con transcripción en tiempo real (Web Speech, solo Chrome).
 4. Guardar.
 
 ### 3.2 Tipos de reunión

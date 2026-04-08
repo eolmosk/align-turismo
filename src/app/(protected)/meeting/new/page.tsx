@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { MeetingType, InputMethod, MEETING_TYPE_LABELS, Contact, TOPICS, TOPIC_LABELS } from '@/types'
 import ContactSelector from '@/components/ContactSelector'
 import SchoolLogo from '@/components/SchoolLogo'
+import AudioRecorder from '@/components/AudioRecorder'
 
 const TYPES: MeetingType[] = ['docentes', 'padres', 'individual', 'direccion']
 const DURATIONS = [30, 45, 60, 90, 120]
@@ -491,11 +492,11 @@ function NewMeetingContent() {
         <div className="bg-white rounded-xl border border-warm-200 p-5">
           <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-3">Notas / Minuta *</label>
 
-          <div className="flex gap-1 mb-4 bg-warm-100 p-1 rounded-lg w-fit">
-            {(['text', 'voice', 'file'] as InputMethod[]).map(m => (
+          <div className="flex gap-1 mb-4 bg-warm-100 p-1 rounded-lg flex-wrap">
+            {(['text', 'voice', 'file', 'audio'] as InputMethod[]).map(m => (
               <button key={m} onClick={() => { setInputMethod(m); setLiveMode(false) }}
                 className={`text-xs px-3 py-1.5 rounded-md transition-colors ${inputMethod === m && !liveMode ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500 hover:text-warm-700'}`}>
-                {m === 'text' ? 'Texto' : m === 'voice' ? 'Dictado' : 'Archivo'}
+                {m === 'text' ? 'Texto' : m === 'voice' ? 'Dictado' : m === 'file' ? 'Archivo' : 'Audio HD'}
               </button>
             ))}
             <button onClick={() => { setInputMethod('voice'); setLiveMode(true) }}
@@ -562,6 +563,20 @@ function NewMeetingContent() {
               </svg>
               {fileName ? <p className="text-sm text-brand font-medium">{fileName} cargado</p>
                 : <><p className="text-sm text-warm-500">Arrastrá un archivo o hacé clic</p><p className="text-xs text-warm-400 mt-1">.txt · .pdf</p></>}
+            </div>
+          )}
+
+          {inputMethod === 'audio' && !liveMode && (
+            <div>
+              <AudioRecorder onTranscribed={(text) => {
+                setNotes((prev) => prev ? `${prev}\n\n${text}` : text)
+                setInputMethod('text')
+              }} />
+              {notes && (
+                <div className="mt-4 bg-warm-50 rounded-lg p-4 text-sm text-warm-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                  {notes}
+                </div>
+              )}
             </div>
           )}
         </div>

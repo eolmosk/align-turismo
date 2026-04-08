@@ -115,6 +115,7 @@ NextAuth con estrategia JWT y magic link por email (Resend).
 | `/api/search` | GET | Búsqueda global (texto) |
 | `/api/ask` | POST | Búsqueda conversacional: embed + `match_meetings` + Claude |
 | `/api/embeddings/backfill` | POST | Indexa reuniones pendientes (idempotente, `maxDuration=300`) |
+| `/api/transcribe` | POST | Recibe blob de audio (FormData `file`), reenvía a Whisper (`whisper-1`, `language=es`), devuelve `{ text }`. Límite 25 MB. Sin persistencia. |
 | `/api/digest/weekly` | POST | Envío del digest semanal (Vercel cron, lunes) |
 
 Todas las rutas protegidas validan `getServerSession(authOptions)` y filtran por `school_id`.

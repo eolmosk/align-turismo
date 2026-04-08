@@ -77,6 +77,9 @@ Tab del Dashboard que consolida la vista diaria del usuario: acciones asignadas 
 ### 3.15 Digest semanal por email
 Cada lunes se envía un resumen semanal a cada usuario activo: reuniones próximas, reuniones sin IA, y sus pendientes (hasta 8). El subject prioriza reuniones sobre pendientes para evitar empezar la semana con una cifra abrumadora. Implementado como cron de Vercel.
 
+### 3.16a Audio HD con transcripción (Whisper)
+Nuevo modo de entrada "Audio HD" en `/meeting/new`: graba con `MediaRecorder` del navegador, al detener envía el blob a `/api/transcribe` que lo reenvía a OpenAI Whisper (`whisper-1`, `language: es`) y devuelve el texto. El texto se agrega al campo de notas. Sin persistencia del audio (se descarta tras la transcripción). Funciona en Safari/iOS a diferencia del modo "Dictado" (Web Speech API). Límite 25 MB por grabación.
+
 ### 3.16 PWA instalable
 Align se puede instalar en Android/iOS como app (agregar a pantalla de inicio). Corre en modo standalone (sin barra del navegador), con ícono propio, splash y color de tema. Service worker mínimo cachea assets estáticos para carga rápida; las APIs siempre van a red para no mostrar datos viejos. Shortcuts: "Nueva reunión" y "Hoy" desde la home del sistema.
 
