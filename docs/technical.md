@@ -14,6 +14,7 @@
 | Vector search | pgvector en Supabase (cosine similarity) |
 | Email | Resend |
 | Cron | Vercel Cron (`vercel.json`) |
+| PWA | Service worker manual (`public/sw.js`) + `public/manifest.json` |
 | Hosting | Vercel |
 | Iconos | lucide-react |
 | Fechas | date-fns |
@@ -125,6 +126,17 @@ Todas las rutas protegidas validan `getServerSession(authOptions)` y filtran por
 - Input: contenido crudo de la minuta + tipo de reunión + contexto del hilo.
 - Output: `{ summary, actions[], questions[] }`.
 - Editable por el usuario antes de persistir.
+
+## 6.1 PWA
+
+- **`public/manifest.json`**: nombre, íconos, `display: standalone`, `start_url: /dashboard`, theme color `#e11d48`, shortcuts a "Nueva reunión" y "Hoy".
+- **`public/sw.js`**: service worker manual (~60 líneas). Precachea `/`, manifest y el ícono. Estrategia:
+  - `/api/*` y `/auth/*` → nunca cachear, siempre network.
+  - Navigations → network-first, fallback a `/` cacheado si no hay conexión.
+  - Assets estáticos (`_next/static`, imágenes, fuentes, css, js) → cache-first.
+  - Versionado con `CACHE_VERSION` para invalidar al deployar.
+- **`ServiceWorkerRegister`** (client component en `layout.tsx`): registra `/sw.js` solo en producción (en dev se salta para evitar caches confusas).
+- **Meta tags**: `metadata.manifest`, `metadata.appleWebApp`, `viewport.themeColor` en `src/app/layout.tsx`.
 
 ## 6.2 Búsqueda conversacional — `/api/ask`
 

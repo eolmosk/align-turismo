@@ -1,0 +1,40 @@
+{
+  "name": "Align — Reuniones escolares",
+  "short_name": "Align",
+  "description": "Gestión de reuniones escolares con IA",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdf6f3",
+  "theme_color": "#e11d48",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva reunión",
+      "short_name": "Nueva",
+      "url": "/meeting/new",
+      "icons": [{ "src": "/icon.png", "sizes": "any" }]
+    },
+    {
+      "name": "Hoy",
+      "short_name": "Hoy",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon.png", "sizes": "any" }]
+    }
+  ]
+}

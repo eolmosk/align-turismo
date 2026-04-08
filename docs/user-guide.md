@@ -108,6 +108,24 @@ Tab **Hoy** en el Dashboard. Es tu punto de entrada diario:
 
 ---
 
+## 7b. Instalar Align en el celular (PWA)
+
+Align es una **Progressive Web App**: podés instalarla en tu celular y usarla como una app nativa, sin Play Store ni App Store.
+
+**Android (Chrome):**
+1. Abrí `align.frameops.net` en Chrome.
+2. Menú (⋮) → **Agregar a pantalla de inicio** / **Instalar app**.
+3. Confirmá. Queda el ícono de Align en tu home.
+
+**iPhone (Safari):**
+1. Abrí `align.frameops.net` en Safari.
+2. Botón compartir (▭↑) → **Agregar a pantalla de inicio**.
+3. Confirmá.
+
+Al abrir desde el ícono, Align corre a pantalla completa, sin barra del navegador. Los assets quedan cacheados para que cargue rápido incluso con conexión lenta.
+
+---
+
 ## 8. Digest semanal por email
 
 Cada lunes a la mañana, recibís un email con el resumen de tu semana en Align:

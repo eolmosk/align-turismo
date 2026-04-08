@@ -1,11 +1,31 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SessionProvider } from './providers'
 import AppFooter from '@/components/AppFooter'
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 
 export const metadata: Metadata = {
-  title: 'Gestor de reuniones',
-  description: 'Sistema de gestión de minutas con IA para directores escolares',
+  title: 'Align — Reuniones escolares',
+  description: 'Gestión de reuniones escolares con IA',
+  manifest: '/manifest.json',
+  applicationName: 'Align',
+  appleWebApp: {
+    capable: true,
+    title: 'Align',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#e11d48',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <AppFooter />
         </SessionProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   )

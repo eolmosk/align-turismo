@@ -77,7 +77,10 @@ Tab del Dashboard que consolida la vista diaria del usuario: acciones asignadas 
 ### 3.15 Digest semanal por email
 Cada lunes se envía un resumen semanal a cada usuario activo: reuniones próximas, reuniones sin IA, y sus pendientes (hasta 8). El subject prioriza reuniones sobre pendientes para evitar empezar la semana con una cifra abrumadora. Implementado como cron de Vercel.
 
-### 3.16 Preguntar — búsqueda conversacional
+### 3.16 PWA instalable
+Align se puede instalar en Android/iOS como app (agregar a pantalla de inicio). Corre en modo standalone (sin barra del navegador), con ícono propio, splash y color de tema. Service worker mínimo cachea assets estáticos para carga rápida; las APIs siempre van a red para no mostrar datos viejos. Shortcuts: "Nueva reunión" y "Hoy" desde la home del sistema.
+
+### 3.17 Preguntar — búsqueda conversacional
 Tab del Dashboard donde el usuario hace preguntas en lenguaje natural sobre el historial de reuniones. El sistema embebe la pregunta, busca por similitud semántica en los embeddings de las reuniones de la escuela, y Claude responde citando las fuentes. Limitado a 500 caracteres por pregunta, top 5 reuniones como contexto, respuestas de 2-4 párrafos.
 
 ## 4. Flujos principales
