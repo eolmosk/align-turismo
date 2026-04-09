@@ -31,20 +31,12 @@ interface ThreadSummary {
   contactNames: string[]
 }
 
-interface StatsData {
-  totalMeetings: number
-  byMonth: { month: string; count: number }[]
-  byType: Record<string, number>
-  topParticipants: { name: string; count: number }[]
-  topWords: { word: string; count: number }[]
-}
-
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [tab, setTab] = useState<'hoy' | 'hilos' | 'reuniones' | 'pendientes' | 'preguntar' | 'stats'>('hoy')
+  const [tab, setTab] = useState<'hoy' | 'hilos' | 'reuniones' | 'preguntar'>('hoy')
 
   // Hoy (inbox)
   const [inbox, setInbox] = useState<any>(null)
@@ -76,10 +68,6 @@ export default function Dashboard() {
   const [loadingPending, setLoadingPending] = useState(false)
   const [pendingLoaded, setPendingLoaded] = useState(false)
 
-  // Stats
-  const [stats, setStats] = useState<StatsData | null>(null)
-  const [loadingStats, setLoadingStats] = useState(false)
-  const [statsLoaded, setStatsLoaded] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth')
@@ -113,7 +101,7 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    if (tab === 'pendientes' && pendingLoaded) reloadPending()
+    if (tab === 'hoy' && pendingLoaded) reloadPending()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingFilter])
 
@@ -131,12 +119,25 @@ export default function Dashboard() {
 
   // Carga lazy por tab
   useEffect(() => {
-    if (tab === 'hoy' && !inboxLoaded) {
-      setLoadingInbox(true)
-      fetch(`/api/inbox?filter=${inboxFilter}`)
-        .then(r => r.json())
-        .then(data => { setInbox(data); setInboxLoaded(true); setLoadingInbox(false) })
-        .catch(() => setLoadingInbox(false))
+    if (tab === 'hoy') {
+      if (!inboxLoaded) {
+        setLoadingInbox(true)
+        fetch(`/api/inbox?filter=${inboxFilter}`)
+          .then(r => r.json())
+          .then(data => { setInbox(data); setInboxLoaded(true); setLoadingInbox(false) })
+          .catch(() => setLoadingInbox(false))
+      }
+      if (!pendingLoaded) {
+        setLoadingPending(true)
+        fetch(`/api/actions?filter=${pendingFilter}`)
+          .then(r => r.json())
+          .then(data => {
+            setPendingGroups(Array.isArray(data?.groups) ? data.groups : [])
+            if (data?.counts) setPendingCounts(data.counts)
+            setPendingLoaded(true); setLoadingPending(false)
+          })
+          .catch(() => setLoadingPending(false))
+      }
     }
     if (tab === 'reuniones' && !meetingsLoaded) {
       setLoadingMeetings(true)
@@ -144,24 +145,6 @@ export default function Dashboard() {
         .then(r => r.json())
         .then(data => { setMeetings(Array.isArray(data) ? data : []); setMeetingsLoaded(true); setLoadingMeetings(false) })
         .catch(() => setLoadingMeetings(false))
-    }
-    if (tab === 'pendientes' && !pendingLoaded) {
-      setLoadingPending(true)
-      fetch(`/api/actions?filter=${pendingFilter}`)
-        .then(r => r.json())
-        .then(data => {
-          setPendingGroups(Array.isArray(data?.groups) ? data.groups : [])
-          if (data?.counts) setPendingCounts(data.counts)
-          setPendingLoaded(true); setLoadingPending(false)
-        })
-        .catch(() => setLoadingPending(false))
-    }
-    if (tab === 'stats' && !statsLoaded) {
-      setLoadingStats(true)
-      fetch('/api/stats')
-        .then(r => r.json())
-        .then(data => { setStats(data); setStatsLoaded(true); setLoadingStats(false) })
-        .catch(() => setLoadingStats(false))
     }
   }, [tab])
 
@@ -198,19 +181,6 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Links secundarios — ocultos en mobile */}
-            <div className="hidden sm:flex items-center gap-2">
-              {session?.user?.id === '757692ca-333e-469d-a9eb-d370db452cde' && (
-                <Link href="/admin" className="text-xs text-warm-500 hover:text-warm-700 px-2 py-1">Admin</Link>
-              )}
-              {session?.user?.role === 'owner' && (
-                <Link href="/dashboard/group" className="text-xs text-warm-500 hover:text-warm-700 px-2 py-1">Grupo</Link>
-              )}
-              {(session?.user?.role === 'owner' || session?.user?.role === 'director') && (
-                <Link href="/users" className="text-xs text-warm-500 hover:text-warm-700 px-2 py-1">Usuarios</Link>
-              )}
-              <Link href="/contacts" className="text-xs text-warm-500 hover:text-warm-700 px-2 py-1">Contactos</Link>
-            </div>
             <Link href="/meeting/new"
               className="text-xs sm:text-sm border border-warm-200 text-warm-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-warm-50 transition-colors whitespace-nowrap">
               + Reunión
@@ -219,55 +189,98 @@ export default function Dashboard() {
               className="text-xs sm:text-sm bg-brand text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-brand-600 transition-colors whitespace-nowrap">
               + Hilo
             </button>
-            {/* Mobile menu toggle */}
-            <button onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="sm:hidden text-warm-400 hover:text-warm-600 p-1.5 rounded-lg hover:bg-warm-100 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <button onClick={() => signOut({ callbackUrl: '/auth' })} title="Cerrar sesión"
-              className="hidden sm:block text-warm-400 hover:text-warm-600 p-2 rounded-lg hover:bg-warm-100 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            {/* Menú configuración (engranaje) */}
+            <div className="relative">
+              <button onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="text-warm-400 hover:text-warm-600 p-1.5 sm:p-2 rounded-lg hover:bg-warm-100 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              {showMobileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border border-warm-200 shadow-lg py-1 min-w-[180px]">
+                    <Link href="/stats" onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                      <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Estadísticas
+                    </Link>
+                    <Link href="/contacts" onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                      <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Contactos
+                    </Link>
+                    {(session?.user?.role === 'owner' || session?.user?.role === 'director' || session?.user?.role === 'vicedirector') && (
+                      <Link href="/users" onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                        <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Usuarios
+                      </Link>
+                    )}
+                    {session?.user?.role === 'owner' && (
+                      <Link href="/dashboard/group" onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                        <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Grupo
+                      </Link>
+                    )}
+                    {session?.user?.id === '757692ca-333e-469d-a9eb-d370db452cde' && (
+                      <Link href="/admin" onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                        <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Admin
+                      </Link>
+                    )}
+                    <Link href="/billing" onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-700 hover:bg-warm-50">
+                      <svg className="w-4 h-4 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      Suscripción
+                    </Link>
+                    <div className="border-t border-warm-100 mt-1 pt-1">
+                      <button onClick={() => { setShowMobileMenu(false); signOut({ callbackUrl: '/auth' }) }}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-500 hover:bg-warm-50 w-full text-left">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar sesión
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
-        {/* Mobile dropdown menu */}
-        {showMobileMenu && (
-          <div className="sm:hidden border-t border-warm-100 mt-3 pt-3 flex flex-wrap gap-2">
-            {session?.user?.id === '757692ca-333e-469d-a9eb-d370db452cde' && (
-              <Link href="/admin" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Admin</Link>
-            )}
-            {session?.user?.role === 'owner' && (
-              <Link href="/dashboard/group" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Grupo</Link>
-            )}
-            {(session?.user?.role === 'owner' || session?.user?.role === 'director') && (
-              <Link href="/users" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Usuarios</Link>
-            )}
-            <Link href="/contacts" className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">Contactos</Link>
-            <button onClick={() => signOut({ callbackUrl: '/auth' })}
-              className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5 border border-warm-200 rounded-lg">
-              Cerrar sesión
-            </button>
-          </div>
-        )}
       </header>
 
       <SubscriptionBanner />
 
       {/* Tabs */}
       <div className="bg-white border-b border-warm-100 px-4 sm:px-6 overflow-x-auto">
-        <div className="max-w-4xl mx-auto flex gap-3 sm:gap-6 min-w-max">
-          {(['hoy', 'hilos', 'reuniones', 'pendientes', 'preguntar', 'stats'] as const).map(t => (
+        <div className="max-w-4xl mx-auto flex gap-4 sm:gap-8">
+          {(['hoy', 'hilos', 'reuniones', 'preguntar'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-sm py-3 border-b-2 transition-colors whitespace-nowrap ${
                 tab === t ? 'border-brand text-warm-900 font-medium' : 'border-transparent text-warm-500 hover:text-warm-700'
               }`}>
-              {t === 'hoy' ? 'Hoy' : t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : t === 'pendientes' ? 'Pendientes' : t === 'preguntar' ? 'Preguntar' : 'Estadísticas'}
-              {t === 'pendientes' && totalPending > 0 && (
+              {t === 'hoy' ? 'Hoy' : t === 'hilos' ? 'Hilos' : t === 'reuniones' ? 'Reuniones' : 'Preguntar'}
+              {t === 'hoy' && totalPending > 0 && (
                 <span className="ml-2 bg-brand text-white text-xs px-1.5 py-0.5 rounded-full">{totalPending}</span>
               )}
             </button>
@@ -283,29 +296,11 @@ export default function Dashboard() {
             directorName={session?.user?.name ?? session?.user?.email ?? ''}
             filter={inboxFilter}
             onFilterChange={setInboxFilter}
-          />
-        )}
-        {tab === 'hilos' && <HilosTab threads={threads} onNewThread={() => setShowNewThread(true)} onUnarchive={() => {
-          fetch('/api/threads').then(r => r.json()).then(data => { setThreads(Array.isArray(data) ? data : []) })
-        }} />}
-        {tab === 'reuniones' && (
-          <ReunionesTab
-            meetings={meetings}
-            loading={loadingMeetings}
-            search={search} setSearch={setSearch}
-            filterCourse={filterCourse} setFilterCourse={setFilterCourse}
-            filterSubject={filterSubject} setFilterSubject={setFilterSubject}
-            filterYear={filterYear} setFilterYear={setFilterYear}
-            filterTag={filterTag} setFilterTag={setFilterTag}
-          />
-        )}
-        {tab === 'pendientes' && (
-          <PendientesTab
-            groups={pendingGroups}
-            counts={pendingCounts}
-            filter={pendingFilter}
-            onFilterChange={setPendingFilter}
-            loading={loadingPending}
+            pendingGroups={pendingGroups}
+            pendingCounts={pendingCounts}
+            pendingFilter={pendingFilter}
+            onPendingFilterChange={setPendingFilter}
+            loadingPending={loadingPending}
             currentUserId={session?.user?.id ?? ''}
             onToggle={async (meetingId, actionId) => {
               await fetch(`/api/meetings/${meetingId}/actions/${actionId}`, {
@@ -322,7 +317,6 @@ export default function Dashboard() {
                 body: JSON.stringify({
                   assigned_user_id: value.userId,
                   assigned_contact_id: value.contactId,
-                  // Limpiar texto libre legacy cuando se asigna estructuralmente
                   assigned_to: value.userId || value.contactId ? null : undefined,
                 }),
               })
@@ -330,8 +324,21 @@ export default function Dashboard() {
             }}
           />
         )}
+        {tab === 'hilos' && <HilosTab threads={threads} onNewThread={() => setShowNewThread(true)} onUnarchive={() => {
+          fetch('/api/threads').then(r => r.json()).then(data => { setThreads(Array.isArray(data) ? data : []) })
+        }} />}
+        {tab === 'reuniones' && (
+          <ReunionesTab
+            meetings={meetings}
+            loading={loadingMeetings}
+            search={search} setSearch={setSearch}
+            filterCourse={filterCourse} setFilterCourse={setFilterCourse}
+            filterSubject={filterSubject} setFilterSubject={setFilterSubject}
+            filterYear={filterYear} setFilterYear={setFilterYear}
+            filterTag={filterTag} setFilterTag={setFilterTag}
+          />
+        )}
         {tab === 'preguntar' && <AskTab />}
-        {tab === 'stats' && <StatsTab stats={stats} loading={loadingStats} />}
       </main>
 
       {showNewThread && (
@@ -588,43 +595,62 @@ function ReunionesTab({
     </div>
   )
 
+  const [showFilters, setShowFilters] = useState(false)
+  const activeFilterCount = [filterCourse, filterSubject, filterYear, filterTag].filter(Boolean).length
+
   return (
     <div>
       {/* Barra de búsqueda y filtros */}
       <div className="mb-6 space-y-3">
-        <input
-          type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar reuniones..."
-          className="w-full text-sm bg-white border border-warm-200 rounded-xl px-4 py-2.5"
-        />
-        <div className="flex gap-2 flex-wrap">
-          <select value={filterCourse} onChange={e => setFilterCourse(e.target.value)}
-            className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
-            <option value="">Todos los cursos</option>
-            {courses.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
-            className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
-            <option value="">Todas las materias</option>
-            {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
-            className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
-            <option value="">Todos los años</option>
-            {years.map(y => <option key={y} value={String(y)}>{y}</option>)}
-          </select>
-          <select value={filterTag} onChange={e => setFilterTag(e.target.value)}
-            className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
-            <option value="">Todas las etiquetas</option>
-            {allTags.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          {hasFilters && (
-            <button onClick={() => { setSearch(''); setFilterCourse(''); setFilterSubject(''); setFilterYear(''); setFilterTag('') }}
-              className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5">
-              Limpiar filtros
-            </button>
-          )}
+        <div className="flex gap-2">
+          <input
+            type="text" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar reuniones..."
+            className="flex-1 text-sm bg-white border border-warm-200 rounded-xl px-4 py-2.5"
+          />
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`text-xs border rounded-xl px-3 py-2 flex items-center gap-1.5 transition-colors flex-shrink-0 ${
+              showFilters || activeFilterCount > 0
+                ? 'border-brand text-brand bg-brand-50'
+                : 'border-warm-200 text-warm-500 hover:border-warm-300'
+            }`}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+          </button>
         </div>
+        {showFilters && (
+          <div className="flex gap-2 flex-wrap">
+            <select value={filterCourse} onChange={e => setFilterCourse(e.target.value)}
+              className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
+              <option value="">Todos los cursos</option>
+              {courses.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
+              className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
+              <option value="">Todas las materias</option>
+              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+              className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
+              <option value="">Todos los años</option>
+              {years.map(y => <option key={y} value={String(y)}>{y}</option>)}
+            </select>
+            <select value={filterTag} onChange={e => setFilterTag(e.target.value)}
+              className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
+              <option value="">Todas las etiquetas</option>
+              {allTags.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            {hasFilters && (
+              <button onClick={() => { setSearch(''); setFilterCourse(''); setFilterSubject(''); setFilterYear(''); setFilterTag('') }}
+                className="text-xs text-warm-500 hover:text-warm-700 px-3 py-1.5">
+                Limpiar
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {meetings.length === 0 ? (
@@ -701,246 +727,6 @@ function ReunionesTab({
             )
           })}
         </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Tab: Estadísticas ────────────────────────────────────────────────────────
-
-function StatsTab({ stats, loading }: { stats: StatsData | null; loading: boolean }) {
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
-    </div>
-  )
-  if (!stats) return (
-    <div className="text-center py-24 text-sm text-warm-400">No se pudieron cargar las estadísticas.</div>
-  )
-
-  if (stats.totalMeetings === 0) return (
-    <div className="bg-white rounded-xl border border-warm-200 p-12 text-center">
-      <p className="text-sm font-medium text-warm-900 mb-1">Todavía no hay reuniones registradas</p>
-      <p className="text-sm text-warm-500">Las estadísticas aparecerán cuando empieces a registrar reuniones.</p>
-    </div>
-  )
-
-  const maxMonth = Math.max(...stats.byMonth.map(m => m.count), 1)
-
-  return (
-    <div className="space-y-6">
-      {/* Totales */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        {[
-          { label: 'Total reuniones', value: stats.totalMeetings },
-          { label: 'Docentes', value: stats.byType['docentes'] ?? 0 },
-          { label: 'Padres', value: stats.byType['padres'] ?? 0 },
-          { label: 'Individual', value: stats.byType['individual'] ?? 0 },
-          { label: 'Dirección', value: stats.byType['direccion'] ?? 0 },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl border border-warm-200 p-4">
-            <p className="text-xs text-warm-500 mb-1">{s.label}</p>
-            <p className="text-2xl font-medium text-warm-900">{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Gráfico por mes (barras CSS) */}
-      {stats.byMonth.length > 0 ? (
-        <div className="bg-white rounded-xl border border-warm-200 p-5">
-          <h3 className="text-sm font-medium text-warm-900 mb-4">Reuniones por mes</h3>
-          <div className="flex items-end gap-2 h-32">
-            {stats.byMonth.map(({ month, count }) => {
-              const heightPct = Math.round((count / maxMonth) * 100)
-              const [year, m] = month.split('-')
-              const label = format(new Date(Number(year), Number(m) - 1), 'MMM', { locale: es })
-              return (
-                <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs text-warm-500">{count}</span>
-                  <div className="w-full bg-brand rounded-t-sm" style={{ height: `${heightPct}%`, minHeight: '4px' }} />
-                  <span className="text-xs text-warm-400 capitalize">{label}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-warm-200 p-5">
-          <h3 className="text-sm font-medium text-warm-900 mb-2">Reuniones por mes</h3>
-          <p className="text-sm text-warm-400">No hay datos suficientes aún.</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Participantes frecuentes */}
-        <div className="bg-white rounded-xl border border-warm-200 p-5">
-          <h3 className="text-sm font-medium text-warm-900 mb-3">Participantes frecuentes</h3>
-          {stats.topParticipants.length > 0 ? (
-            <div className="space-y-2">
-              {stats.topParticipants.slice(0, 8).map(({ name, count }) => (
-                <div key={name} className="flex items-center justify-between">
-                  <span className="text-sm text-warm-700 truncate flex-1 mr-2">{name}</span>
-                  <span className="text-xs text-warm-400 flex-shrink-0">{count} reunión{count > 1 ? 'es' : ''}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-warm-400">Agregá participantes a tus reuniones para ver quiénes participan más.</p>
-          )}
-        </div>
-
-        {/* Palabras frecuentes */}
-        <div className="bg-white rounded-xl border border-warm-200 p-5">
-          <h3 className="text-sm font-medium text-warm-900 mb-3">Palabras más frecuentes</h3>
-          {stats.topWords.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {stats.topWords.slice(0, 20).map(({ word, count }) => {
-                const size = count > 10 ? 'text-base font-medium' : count > 5 ? 'text-sm' : 'text-xs'
-                return (
-                  <span key={word} className={`${size} text-warm-700 bg-warm-100 px-2 py-0.5 rounded`}>
-                    {word}
-                  </span>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-warm-400">Las palabras clave aparecerán cuando las reuniones tengan notas o resúmenes de IA.</p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Tab pendientes ───────────────────────────────────────────────────────────
-
-function PendientesTab({
-  groups, counts, filter, onFilterChange, loading, currentUserId, onToggle, onAssign
-}: {
-  groups: any[]
-  counts: { all: number; mine: number; unassigned: number }
-  filter: 'all' | 'mine' | 'unassigned'
-  onFilterChange: (f: 'all' | 'mine' | 'unassigned') => void
-  loading: boolean
-  currentUserId: string
-  onToggle: (meetingId: string, actionId: string) => void
-  onAssign: (meetingId: string, actionId: string, value: { userId: string | null; contactId: string | null }) => Promise<void>
-}) {
-  const [pickerFor, setPickerFor] = useState<{ meetingId: string; action: any } | null>(null)
-
-  const filterTabs: Array<{ id: 'all' | 'mine' | 'unassigned'; label: string; count: number }> = [
-    { id: 'all', label: 'Todas', count: counts.all },
-    { id: 'mine', label: 'Mías', count: counts.mine },
-    { id: 'unassigned', label: 'Sin asignar', count: counts.unassigned },
-  ]
-
-  return (
-    <div className="space-y-4">
-      {/* Sub-filtros */}
-      <div className="flex gap-2 flex-wrap">
-        {filterTabs.map((f) => (
-          <button
-            key={f.id}
-            onClick={() => onFilterChange(f.id)}
-            className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-              filter === f.id
-                ? 'bg-brand text-white border-brand'
-                : 'border-warm-200 text-warm-600 hover:border-warm-300'
-            }`}>
-            {f.label}
-            <span className={`ml-2 text-xs ${filter === f.id ? 'opacity-80' : 'text-warm-400'}`}>{f.count}</span>
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
-        </div>
-      ) : groups.length === 0 ? (
-        <div className="bg-white rounded-xl border border-warm-200 p-10 text-center">
-          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3">
-            <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-sm font-medium text-warm-900">
-            {filter === 'mine' ? 'No tenés pendientes asignados a vos' :
-             filter === 'unassigned' ? 'Todas las acciones tienen responsable' :
-             'Todo al día'}
-          </p>
-          <p className="text-sm text-warm-400 mt-1">
-            {filter === 'all' ? 'No hay acciones pendientes en ningún hilo.' : ''}
-          </p>
-        </div>
-      ) : (
-        groups.map((group) => (
-          <div key={group.thread.id} className="bg-white rounded-xl border border-warm-200 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-warm-100 flex items-center justify-between">
-              <Link href={`/thread/${group.thread.id}`}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <span className="text-sm font-medium text-warm-900">{group.thread.name}</span>
-                <svg className="w-3.5 h-3.5 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <span className="text-xs bg-brand-100 text-brand-600 px-2 py-0.5 rounded-full">
-                {group.actions.length} pendiente{group.actions.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="divide-y divide-warm-50">
-              {group.actions.map((action: any) => {
-                const assigneeName = action.assigned_user?.name ?? action.assigned_user?.email
-                  ?? action.assigned_contact?.name ?? action.assigned_to ?? null
-                const isMine = action.isMine
-                const isUnassigned = action.isUnassigned
-                return (
-                  <div
-                    key={action.id}
-                    className={`flex items-start gap-3 px-5 py-3.5 ${isMine ? 'bg-brand-50/40' : ''}`}
-                  >
-                    <button
-                      onClick={() => onToggle(action.meeting_id, action.id)}
-                      className="w-4 h-4 mt-0.5 rounded border border-warm-300 hover:border-brand hover:bg-brand-50 flex items-center justify-center flex-shrink-0 transition-colors"
-                      title="Marcar como hecho">
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-warm-800">{action.text}</p>
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        <p className="text-xs text-warm-400">
-                          {action.meeting_title} · {format(parseISO(action.meeting_date), "d MMM yyyy", { locale: es })}
-                        </p>
-                        <button
-                          onClick={() => setPickerFor({ meetingId: action.meeting_id, action })}
-                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                            isUnassigned
-                              ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                              : isMine
-                              ? 'bg-brand text-white border-brand hover:opacity-90'
-                              : 'bg-warm-100 text-warm-700 border-warm-200 hover:bg-warm-200'
-                          }`}
-                        >
-                          {isUnassigned ? '⚠ Sin asignar' : `${isMine ? '● ' : '✓ '}${assigneeName}`}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))
-      )}
-
-      {pickerFor && (
-        <AssigneePicker
-          currentUserId={pickerFor.action.assigned_user_id ?? null}
-          currentContactId={pickerFor.action.assigned_contact_id ?? null}
-          onSelect={async (value) => {
-            await onAssign(pickerFor.meetingId, pickerFor.action.id, value)
-          }}
-          onClose={() => setPickerFor(null)}
-        />
       )}
     </div>
   )
@@ -1092,12 +878,22 @@ function NewThreadModal({ onClose, onCreated }: {
 
 // ─── Tab: Hoy (bandeja del director) ──────────────────────────────────────────
 
-function HoyTab({ inbox, loading, directorName, filter, onFilterChange }: {
+function HoyTab({ inbox, loading, directorName, filter, onFilterChange,
+  pendingGroups, pendingCounts, pendingFilter, onPendingFilterChange, loadingPending, currentUserId, onToggle, onAssign
+}: {
   inbox: any
   loading: boolean
   directorName: string
   filter: 'mine' | 'all'
   onFilterChange: (f: 'mine' | 'all') => void
+  pendingGroups: any[]
+  pendingCounts: { all: number; mine: number; unassigned: number }
+  pendingFilter: 'all' | 'mine' | 'unassigned'
+  onPendingFilterChange: (f: 'all' | 'mine' | 'unassigned') => void
+  loadingPending: boolean
+  currentUserId: string
+  onToggle: (meetingId: string, actionId: string) => void
+  onAssign: (meetingId: string, actionId: string, value: { userId: string | null; contactId: string | null }) => Promise<void>
 }) {
   if (loading || !inbox) {
     return (
@@ -1193,73 +989,137 @@ function HoyTab({ inbox, loading, directorName, filter, onFilterChange }: {
         </section>
       )}
 
-      {/* Pendientes */}
+      {/* Pendientes completos */}
       <section>
         <div className="flex items-end justify-between mb-3 gap-3 flex-wrap">
           <h3 className="text-xs font-medium text-warm-500 uppercase tracking-wide">
-            Acciones pendientes
+            Todas las acciones pendientes
           </h3>
           <div className="flex gap-1 bg-warm-100 rounded-full p-0.5">
-            <button
-              onClick={() => onFilterChange('mine')}
-              className={`text-xs px-3 py-1 rounded-full transition-colors ${
-                filter === 'mine' ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500'
-              }`}
-            >
-              Mías {filter === 'mine' ? `(${totals.pending ?? 0})` : ''}
-            </button>
-            <button
-              onClick={() => onFilterChange('all')}
-              className={`text-xs px-3 py-1 rounded-full transition-colors ${
-                filter === 'all' ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500'
-              }`}
-            >
-              Todas {filter === 'all' ? `(${totals.pending ?? 0})` : ''}
-            </button>
+            {([
+              { id: 'all' as const, label: 'Todas' },
+              { id: 'mine' as const, label: 'Mías' },
+              { id: 'unassigned' as const, label: 'Sin asignar' },
+            ]).map(f => (
+              <button key={f.id}
+                onClick={() => onPendingFilterChange(f.id)}
+                className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                  pendingFilter === f.id ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500'
+                }`}>
+                {f.label}
+                <span className={`ml-1 ${pendingFilter === f.id ? 'text-warm-500' : 'text-warm-400'}`}>
+                  {pendingCounts[f.id]}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {pendingActions.length === 0 ? (
+        {loadingPending ? (
+          <div className="flex justify-center py-10">
+            <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
+          </div>
+        ) : pendingGroups.length === 0 ? (
           <div className="bg-white rounded-xl border border-warm-200 p-8 text-center">
-            <p className="text-sm text-warm-500">
-              {filter === 'mine' ? 'No tenés pendientes asignados a vos.' : 'No hay acciones pendientes.'}
+            <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-warm-900">
+              {pendingFilter === 'mine' ? 'No tenés pendientes asignados a vos' :
+               pendingFilter === 'unassigned' ? 'Todas las acciones tienen responsable' :
+               'Todo al día'}
             </p>
           </div>
         ) : (
-          <>
-            {totals.pending > pendingActions.length && (
-              <p className="text-xs text-warm-400 mb-2">
-                Mostrando {pendingActions.length} de {totals.pending}
-              </p>
-            )}
-            <div className="bg-white rounded-xl border border-warm-200 divide-y divide-warm-100">
-              {pendingActions.map((a: any) => (
-                <Link key={a.id} href={`/meeting/${a.meetingId}`}
-                  className={`flex items-start gap-3 px-5 py-3 transition-colors ${
-                    a.isMine ? 'bg-brand-50/40 hover:bg-brand-50' : 'hover:bg-warm-50'
-                  }`}>
-                  <div className="w-4 h-4 border-2 border-warm-300 rounded mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-warm-900">{a.text}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <p className="text-xs text-warm-400 truncate">{a.meetingTitle}</p>
-                      {a.isUnassigned ? (
-                        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          ⚠ Sin asignar
-                        </span>
-                      ) : a.isMine ? (
-                        <span className="text-xs text-brand font-medium">● Para vos</span>
-                      ) : a.assigneeName ? (
-                        <span className="text-xs text-warm-500">✓ {a.assigneeName}</span>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </>
+          <PendientesSection
+            groups={pendingGroups}
+            currentUserId={currentUserId}
+            onToggle={onToggle}
+            onAssign={onAssign}
+          />
         )}
       </section>
+    </div>
+  )
+}
+
+// ─── Sección pendientes (usada dentro de HoyTab) ────────────────────────────
+
+function PendientesSection({ groups, currentUserId, onToggle, onAssign }: {
+  groups: any[]
+  currentUserId: string
+  onToggle: (meetingId: string, actionId: string) => void
+  onAssign: (meetingId: string, actionId: string, value: { userId: string | null; contactId: string | null }) => Promise<void>
+}) {
+  const [pickerFor, setPickerFor] = useState<{ meetingId: string; action: any } | null>(null)
+
+  return (
+    <div className="space-y-3">
+      {groups.map((group) => (
+        <div key={group.thread.id} className="bg-white rounded-xl border border-warm-200 overflow-hidden">
+          <div className="px-5 py-3 border-b border-warm-100 flex items-center justify-between">
+            <Link href={`/thread/${group.thread.id}`}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <span className="text-sm font-medium text-warm-900">{group.thread.name}</span>
+              <svg className="w-3.5 h-3.5 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <span className="text-xs bg-brand-100 text-brand-600 px-2 py-0.5 rounded-full">
+              {group.actions.length} pendiente{group.actions.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="divide-y divide-warm-50">
+            {group.actions.map((action: any) => {
+              const assigneeName = action.assigned_user?.name ?? action.assigned_user?.email
+                ?? action.assigned_contact?.name ?? action.assigned_to ?? null
+              const isMine = action.isMine
+              const isUnassigned = action.isUnassigned
+              return (
+                <div key={action.id}
+                  className={`flex items-start gap-3 px-5 py-3 ${isMine ? 'bg-brand-50/40' : ''}`}>
+                  <button
+                    onClick={() => onToggle(action.meeting_id, action.id)}
+                    className="w-4 h-4 mt-0.5 rounded border border-warm-300 hover:border-brand hover:bg-brand-50 flex items-center justify-center flex-shrink-0 transition-colors"
+                    title="Marcar como hecho" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-warm-800">{action.text}</p>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      <p className="text-xs text-warm-400">
+                        {action.meeting_title} · {format(parseISO(action.meeting_date), "d MMM yyyy", { locale: es })}
+                      </p>
+                      <button
+                        onClick={() => setPickerFor({ meetingId: action.meeting_id, action })}
+                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                          isUnassigned
+                            ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                            : isMine
+                            ? 'bg-brand text-white border-brand hover:opacity-90'
+                            : 'bg-warm-100 text-warm-700 border-warm-200 hover:bg-warm-200'
+                        }`}>
+                        {isUnassigned ? 'Sin asignar' : `${isMine ? '● ' : ''}${assigneeName}`}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      {pickerFor && (
+        <AssigneePicker
+          currentUserId={pickerFor.action.assigned_user_id ?? null}
+          currentContactId={pickerFor.action.assigned_contact_id ?? null}
+          onSelect={async (value) => {
+            await onAssign(pickerFor.meetingId, pickerFor.action.id, value)
+          }}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
     </div>
   )
 }
