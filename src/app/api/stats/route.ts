@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { canSeeAllMeetings } from '@/lib/permissions'
 
 // Palabras comunes a ignorar en el análisis de frecuencia
 const STOP_WORDS = new Set([
@@ -20,20 +19,52 @@ export async function GET() {
   }
 
   const schoolId = session.user.school_id
-  const seeAll = canSeeAllMeetings(session.user.role)
+  const userId = session.user.id
+  const userRole = session.user.role
+  const LEADERSHIP = ['owner', 'director', 'vicedirector']
 
-  let query = supabaseAdmin
-    .from('meetings')
-    .select('id, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, user_id')
-    .eq('school_id', schoolId)
-    .order('meeting_date', { ascending: true })
+  // Leadership ve stats de todas las reuniones de la escuela
+  // Coordinador/docente solo de las que crearon o participan
+  let meetings: any[] = []
 
-  if (!seeAll) {
-    query = query.eq('user_id', session.user.id)
+  if (LEADERSHIP.includes(userRole)) {
+    const { data, error: err } = await supabaseAdmin
+      .from('meetings')
+      .select('id, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, user_id')
+      .eq('school_id', schoolId)
+      .order('meeting_date', { ascending: true })
+    if (err) return NextResponse.json({ error: err.message }, { status: 500 })
+    meetings = data ?? []
+  } else {
+    // Reuniones que creó
+    const { data: created } = await supabaseAdmin
+      .from('meetings')
+      .select('id, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, user_id')
+      .eq('school_id', schoolId)
+      .eq('user_id', userId)
+      .order('meeting_date', { ascending: true })
+
+    // Reuniones donde participa
+    const { data: participated } = await supabaseAdmin
+      .from('meeting_participants')
+      .select('meeting_id')
+      .eq('user_id', userId)
+
+    const participatedIds = (participated ?? []).map(p => p.meeting_id)
+    const createdIds = new Set((created ?? []).map(m => m.id))
+    const extraIds = participatedIds.filter(id => !createdIds.has(id))
+
+    let extraMeetings: any[] = []
+    if (extraIds.length > 0) {
+      const { data: extra } = await supabaseAdmin
+        .from('meetings')
+        .select('id, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, user_id')
+        .in('id', extraIds)
+      extraMeetings = extra ?? []
+    }
+
+    meetings = [...(created ?? []), ...extraMeetings]
   }
-
-  const { data: meetings, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   if (!meetings?.length) {
     return NextResponse.json({

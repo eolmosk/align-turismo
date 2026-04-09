@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getMeetingVisibility } from '@/lib/visibility'
 
 // GET /api/threads — lista hilos de la escuela con stats
 // GET /api/threads?archived=true — lista hilos archivados
@@ -12,13 +13,15 @@ export async function GET(req: NextRequest) {
   }
 
   const showArchived = req.nextUrl.searchParams.get('archived') === 'true'
+  const userId = session.user.id
+  const userRole = session.user.role
 
   const { data: threads, error } = await supabaseAdmin
     .from('threads')
     .select(`
       *,
       meetings (
-        id, meeting_date, created_at, ai_questions,
+        id, user_id, meeting_date, created_at, ai_questions,
         meeting_actions ( id, text, done )
       ),
       thread_contacts ( contact:contacts ( id, name ) )
@@ -29,9 +32,31 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Agregar stats útiles a cada hilo
+  // Obtener todas las reuniones donde el usuario es participante
+  const allMeetingIds = (threads ?? []).flatMap((t: any) => (t.meetings ?? []).map((m: any) => m.id))
+  const participantSet = new Set<string>()
+  if (allMeetingIds.length > 0) {
+    const { data: parts } = await supabaseAdmin
+      .from('meeting_participants')
+      .select('meeting_id')
+      .eq('user_id', userId)
+      .in('meeting_id', allMeetingIds)
+    for (const p of parts ?? []) participantSet.add(p.meeting_id)
+  }
+
+  // Agregar stats útiles a cada hilo, filtrando reuniones por visibilidad
   const enriched = (threads ?? []).map((t) => {
-    const meetings = t.meetings ?? []
+    const allMeetings = t.meetings ?? []
+
+    // Filtrar reuniones visibles para este usuario
+    const meetings = allMeetings.filter((m: any) => {
+      const vis = getMeetingVisibility({
+        userRole, userId, meetingUserId: m.user_id,
+        isParticipant: participantSet.has(m.id),
+      })
+      return vis !== 'none'
+    })
+
     const allActions = meetings.flatMap((m: any) => m.meeting_actions ?? [])
     const pendingActions = allActions.filter((a: any) => !a.done).length
     const lastMeeting = meetings.sort((a: any, b: any) =>
@@ -54,7 +79,13 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  return NextResponse.json(enriched)
+  // Para coordinador/docente, ocultar hilos sin reuniones visibles
+  const LEADERSHIP = ['owner', 'director', 'vicedirector']
+  const filtered = LEADERSHIP.includes(userRole)
+    ? enriched
+    : enriched.filter((t: any) => t.meetingCount > 0)
+
+  return NextResponse.json(filtered)
 }
 
 // POST /api/threads — crea un nuevo hilo
