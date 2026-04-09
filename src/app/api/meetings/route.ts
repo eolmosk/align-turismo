@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { CreateMeetingInput } from '@/types'
 import { upsertMeetingEmbedding } from '@/lib/embeddings'
 import { requireActiveSubscription } from '@/lib/subscription'
+import { getMeetingVisibility, stripMeetingFields } from '@/lib/visibility'
 
 // GET /api/meetings — lista reuniones de la escuela del usuario
 export async function GET(req: NextRequest) {
@@ -22,6 +23,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Sin acceso a esta escuela' }, { status: 403 })
   }
 
+  const userId = session.user.id
+  const userRole = session.user.role
+
   const { data, error } = await supabaseAdmin
     .from('meetings')
     .select(`
@@ -34,7 +38,32 @@ export async function GET(req: NextRequest) {
     .limit(limit)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  // Obtener reuniones donde el usuario es participante
+  const meetingIds = (data ?? []).map((m: any) => m.id)
+  const participantSet = new Set<string>()
+  if (meetingIds.length > 0) {
+    const { data: parts } = await supabaseAdmin
+      .from('meeting_participants')
+      .select('meeting_id')
+      .eq('user_id', userId)
+      .in('meeting_id', meetingIds)
+    for (const p of parts ?? []) participantSet.add(p.meeting_id)
+  }
+
+  // Aplicar visibilidad
+  const result = (data ?? [])
+    .map((m: any) => {
+      const visibility = getMeetingVisibility({
+        userRole, userId, meetingUserId: m.user_id,
+        isParticipant: participantSet.has(m.id),
+      })
+      if (visibility === 'none') return null
+      return stripMeetingFields(m, visibility)
+    })
+    .filter(Boolean)
+
+  return NextResponse.json(result)
 }
 
 // POST /api/meetings — crea una nueva reunión
@@ -44,7 +73,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const body: CreateMeetingInput & { contact_ids?: string[]; topic?: string } = await req.json()
+  const body: CreateMeetingInput & { contact_ids?: string[]; topic?: string; participant_user_ids?: string[] } = await req.json()
 
   if (!body.title || !body.notes || !body.type) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
@@ -80,6 +109,17 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Insertar creador como participante
+  if (data) {
+    const participantRows = [{ meeting_id: data.id, user_id: session.user.id }]
+    if (body.participant_user_ids?.length) {
+      for (const uid of body.participant_user_ids) {
+        if (uid !== session.user.id) participantRows.push({ meeting_id: data.id, user_id: uid })
+      }
+    }
+    await supabaseAdmin.from('meeting_participants').insert(participantRows)
+  }
 
   // Guardar contactos asociados
   if (body.contact_ids?.length && data) {

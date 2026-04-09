@@ -17,6 +17,18 @@ El problema que resuelve: las reuniones escolares (con familias, equipos pedagó
 
 Un mismo usuario puede tener roles diferentes en distintas escuelas (gracias a `user_schools`).
 
+### 2.1 Visibilidad de reuniones por rol
+
+| | Reunión que creó | Reunión donde participa | Reunión ajena |
+|---|---|---|---|
+| **Owner / Director** | Todo | Todo | Metadatos (título, fecha, tipo, participantes) + estadísticas |
+| **Coordinador** | Todo | Todo | No ve nada |
+| **Docente** | Todo | Solo resumen + acciones (read-only) | No ve nada |
+
+- "Participa" = aparece como participante vinculado a la reunión (tabla `meeting_participants`).
+- Las acciones asignadas a un usuario siempre aparecen en su dashboard, independientemente de su rol.
+- Owner ve metadatos de todas las escuelas de su grupo.
+
 ## 3. Features
 
 ### 3.1 Autenticación sin contraseña

@@ -180,6 +180,12 @@ export default function MeetingDetailPage() {
     </div>
   )
 
+  const vis = meeting._visibility ?? 'full'
+  const canEdit = vis === 'full'
+  const canSeeNotes = vis === 'full'
+  const canSeeQuestions = vis === 'full'
+  const canSeeActions = vis === 'full' || vis === 'summary_actions'
+  const canSeeSummary = vis === 'full' || vis === 'summary_actions'
   const hasAI = !!meeting.ai_questions
   const hasHistory = !!history
   const pendingCount = (history?.pendingActions?.length ?? 0) + (history?.commitments?.length ?? 0)
@@ -216,6 +222,7 @@ export default function MeetingDetailPage() {
               {format(parseISO(meeting.meeting_date), "d 'de' MMMM yyyy", { locale: es })}
             </p>
           </div>
+          {canEdit && (
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
             <button onClick={() => setShowEdit(true)}
               className="text-warm-400 hover:text-warm-700 p-1.5 sm:p-2 rounded-lg hover:bg-warm-100 transition-colors"
@@ -234,6 +241,7 @@ export default function MeetingDetailPage() {
               </svg>
             </button>
           </div>
+          )}
         </div>
       </header>
 
@@ -377,14 +385,22 @@ export default function MeetingDetailPage() {
               </p>
             </div>
           )}
-          <div>
-            <p className="text-xs text-warm-400 uppercase tracking-wide mb-0.5">Notas</p>
-            <p className="text-sm text-warm-700 leading-relaxed whitespace-pre-line">{meeting.notes}</p>
-          </div>
+          {canSeeNotes && meeting.notes && (
+            <div>
+              <p className="text-xs text-warm-400 uppercase tracking-wide mb-0.5">Notas</p>
+              <p className="text-sm text-warm-700 leading-relaxed whitespace-pre-line">{meeting.notes}</p>
+            </div>
+          )}
+          {vis === 'metadata_only' && (
+            <p className="text-xs text-warm-400 italic">Solo tenés acceso a los datos básicos de esta reunión.</p>
+          )}
+          {vis === 'summary_actions' && (
+            <p className="text-xs text-warm-400 italic">Podés ver el resumen y las acciones de esta reunión.</p>
+          )}
         </div>
 
         {/* IA — Seguimiento de esta reunión */}
-        {hasAI ? (
+        {vis === 'metadata_only' ? null : hasAI ? (
           <div className="bg-white rounded-xl border border-warm-200 p-5 space-y-5">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -400,7 +416,7 @@ export default function MeetingDetailPage() {
               </div>
             )}
 
-            {meeting.ai_questions?.length ? (
+            {canSeeQuestions && meeting.ai_questions?.length ? (
               <div>
                 <p className="text-xs text-warm-400 uppercase tracking-wide mb-2">Preguntas para la próxima reunión</p>
                 <ol className="space-y-2">
@@ -410,18 +426,18 @@ export default function MeetingDetailPage() {
                         {i + 1}
                       </span>
                       <span className="flex-1">{q}</span>
-                      <button onClick={() => resolveQuestion(i)}
+                      {canEdit && <button onClick={() => resolveQuestion(i)}
                         className="opacity-0 group-hover:opacity-100 text-xs text-warm-400 hover:text-brand transition-all flex-shrink-0"
                         title="Marcar como resuelta">
                         Resuelta
-                      </button>
+                      </button>}
                     </li>
                   ))}
                 </ol>
               </div>
             ) : null}
 
-            {meeting.ai_commitments?.length && (
+            {canSeeQuestions && meeting.ai_commitments?.length && (
               <div>
                 <p className="text-xs text-warm-400 uppercase tracking-wide mb-2">Compromisos pendientes</p>
                 <ul className="space-y-1.5">
@@ -434,56 +450,54 @@ export default function MeetingDetailPage() {
               </div>
             )}
 
+            {canSeeActions && (
             <div>
               <p className="text-xs text-warm-400 uppercase tracking-wide mb-2">Acciones</p>
               {meeting.actions?.length ? (
                 <ul className="space-y-3 mb-3">
                   {meeting.actions.map((a) => (
                     <li key={a.id} className="flex items-start gap-3 group">
-                      <button onClick={() => toggleAction(a.id, a.done)}
-                        className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                          a.done ? 'bg-brand border-brand' : 'border-warm-300 hover:border-warm-500'
+                      {canEdit ? (
+                        <button onClick={() => toggleAction(a.id, a.done)}
+                          className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                            a.done ? 'bg-brand border-brand' : 'border-warm-300 hover:border-warm-500'
+                          }`}>
+                          {a.done && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
+                          </svg>}
+                        </button>
+                      ) : (
+                        <div className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 ${
+                          a.done ? 'bg-brand border-brand' : 'border-warm-300'
                         }`}>
-                        {a.done && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
-                        </svg>}
-                      </button>
+                          {a.done && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
+                          </svg>}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <input
-                          type="text"
-                          defaultValue={a.text}
-                          onBlur={e => { if (e.target.value !== a.text) updateActionText(a.id, e.target.value) }}
-                          className={`text-sm w-full bg-transparent border-0 p-0 focus:ring-0 ${a.done ? 'line-through text-warm-400' : 'text-warm-700'}`}
-                        />
-                        <input
-                          type="text"
-                          defaultValue={a.assigned_to ?? ''}
-                          onBlur={e => { if (e.target.value !== (a.assigned_to ?? '')) updateAssignedTo(a.id, e.target.value) }}
-                          placeholder="Responsable..."
-                          className="mt-1 text-xs text-warm-500 border-0 border-b border-dashed border-warm-200 focus:border-warm-400 focus:ring-0 bg-transparent w-full px-0 py-0.5 placeholder-warm-300"
-                        />
+                        <p className={`text-sm ${a.done ? 'line-through text-warm-400' : 'text-warm-700'}`}>{a.text}</p>
+                        {a.assigned_to && <p className="mt-0.5 text-xs text-warm-500">{a.assigned_to}</p>}
                       </div>
-                      <button onClick={() => deleteAction(a.id)}
-                        className="opacity-0 group-hover:opacity-100 text-warm-300 hover:text-brand-700 transition-all flex-shrink-0 mt-0.5"
-                        title="Eliminar acción">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
                     </li>
                   ))}
                 </ul>
               ) : null}
-              <form onSubmit={e => { e.preventDefault(); const input = e.currentTarget.elements.namedItem('newAction') as HTMLInputElement; addAction(input.value); input.value = '' }}
-                className="flex gap-2">
-                <input name="newAction" type="text" placeholder="Agregar acción..."
-                  className="flex-1 text-sm border-0 border-b border-dashed border-warm-200 focus:border-warm-400 focus:ring-0 bg-transparent px-0 py-1 placeholder-warm-300" />
-                <button type="submit" className="text-xs text-brand hover:text-brand-700 font-medium flex-shrink-0">+ Agregar</button>
-              </form>
+              {canEdit && (
+                <form onSubmit={e => { e.preventDefault(); const input = e.currentTarget.elements.namedItem('newAction') as HTMLInputElement; addAction(input.value); input.value = '' }}
+                  className="flex gap-2">
+                  <input name="newAction" type="text" placeholder="Agregar acción..."
+                    className="flex-1 text-sm border-0 border-b border-dashed border-warm-200 focus:border-warm-400 focus:ring-0 bg-transparent px-0 py-1 placeholder-warm-300" />
+                  <button type="submit" className="text-xs text-brand hover:text-brand-700 font-medium flex-shrink-0">+ Agregar</button>
+                </form>
+              )}
             </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-warm-200 p-5 space-y-5">
+            {canEdit ? (
+            <>
             <div className="text-center">
               <p className="text-sm text-warm-500 mb-4">Todavía no se generó la guía de seguimiento.</p>
               <button onClick={generateAI} disabled={aiLoading}
@@ -491,7 +505,6 @@ export default function MeetingDetailPage() {
                 {aiLoading ? 'Generando...' : 'Generar con IA'}
               </button>
             </div>
-            {/* Acciones manuales aún sin IA */}
             <div>
               <p className="text-xs text-warm-400 uppercase tracking-wide mb-2">Acciones</p>
               {meeting.actions?.length ? (
@@ -533,11 +546,34 @@ export default function MeetingDetailPage() {
                 <button type="submit" className="text-xs text-brand hover:text-brand-700 font-medium flex-shrink-0">+ Agregar</button>
               </form>
             </div>
+            </>
+            ) : canSeeActions && meeting.actions?.length ? (
+              <div>
+                <p className="text-xs text-warm-400 uppercase tracking-wide mb-2">Acciones</p>
+                <ul className="space-y-2">
+                  {meeting.actions.map((a) => (
+                    <li key={a.id} className="flex items-start gap-3">
+                      <div className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 ${
+                        a.done ? 'bg-brand border-brand' : 'border-warm-300'
+                      }`}>
+                        {a.done && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
+                        </svg>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${a.done ? 'line-through text-warm-400' : 'text-warm-700'}`}>{a.text}</p>
+                        {a.assigned_to && <p className="mt-0.5 text-xs text-warm-500">{a.assigned_to}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         )}
 
         {/* Integraciones Google */}
-        <div className="bg-white rounded-xl border border-warm-200 p-5">
+        {canEdit && <div className="bg-white rounded-xl border border-warm-200 p-5">
           <h2 className="text-sm font-medium text-warm-900 mb-4">Integraciones Google</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button onClick={() => handleGoogle('calendar')}
@@ -570,11 +606,11 @@ export default function MeetingDetailPage() {
               Abrir documento en Drive →
             </a>
           )}
-        </div>
+        </div>}
 
       </main>
 
-      {showEdit && (
+      {canEdit && showEdit && (
         <EditMeetingModal
           meeting={meeting}
           onClose={() => setShowEdit(false)}

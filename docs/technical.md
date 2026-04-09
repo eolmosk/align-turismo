@@ -82,11 +82,12 @@ Tablas principales:
 - **`actions`** — pending actions derivadas de reuniones. `status`, `due_date`, `assignee`.
 - **`contacts`** — agenda de la escuela.
 - **`invitations`** — invitaciones pendientes por email.
+- **`meeting_participants`** — many-to-many entre `meetings` y `users`. Determina visibilidad: un usuario solo ve reuniones que creó o donde fue agregado como participante (salvo owner/director que ven metadatos de todas).
 - **`meeting_history`** — auditoría de cambios.
 - **`subscriptions`** — una fila por escuela. Campos: `plan` (`trial`|`solo`|`institucional`|`grupo_5`|`grupo_10`), `status` (`trialing`|`active`|`expired`|`canceled`), `trial_ends_at`, `active_until`, `notes`. Fase 0 del billing: gestión manual, sin Stripe todavía. La migración `012_subscriptions.sql` hace un backfill de escuelas preexistentes con `status='active'` y 30 días de gracia.
 - **`meeting_embeddings`** — vector `VECTOR(1536)` por reunión, generado con `text-embedding-3-small`. Soporta búsqueda semántica vía la función RPC `match_meetings(query_embedding, school_id_filter, match_count)`. Para volúmenes chicos (<1000 filas) se recomienda NO usar índice IVFFlat — con lists alto y pocas filas muchos clusters quedan vacíos y la búsqueda devuelve 0 resultados. Crear el índice recién al crecer, con `lists ≈ sqrt(N)`.
 
-Row Level Security (RLS) está activo en todas las tablas: cada query se filtra por `school_id` del usuario autenticado.
+Row Level Security (RLS) está activo en todas las tablas: cada query se filtra por `school_id` del usuario autenticado. Además, las reuniones tienen visibilidad por rol basada en `meeting_participants` (ver `src/lib/visibility.ts`).
 
 ## 4. Autenticación
 

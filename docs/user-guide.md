@@ -17,6 +17,12 @@ Align es una plataforma para que directores, coordinadores y docentes gestionen 
 - **Director / Coordinador** — gestiona reuniones, hilos, contactos y acciones.
 - **Docente** — participa en reuniones, ve las que le corresponden y sus acciones pendientes.
 
+### 1.2b ¿Qué puedo ver de cada reunión?
+- **Reuniones que creaste**: acceso completo (notas, resumen, preguntas, acciones, edición, eliminación).
+- **Reuniones donde participás** (director/coordinador): acceso completo. Si sos docente: ves el resumen y las acciones, pero no las notas completas ni las preguntas de seguimiento.
+- **Reuniones donde no participás**: directores y owners ven que existen (título, fecha, tipo), pero no el contenido. Coordinadores y docentes no las ven.
+- **Acciones asignadas a vos** siempre aparecen en tu dashboard, sin importar tu rol.
+
 ### 1.3 Multi-escuela
 Si trabajás en más de una escuela, en el header del Dashboard vas a ver un **selector** con tu escuela activa. Al hacer clic podés cambiar entre escuelas; los datos se recargan automáticamente.
 

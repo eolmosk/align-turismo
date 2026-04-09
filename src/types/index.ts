@@ -99,6 +99,7 @@ export interface Meeting {
   school?: School
   actions?: MeetingAction[]
   contacts?: Contact[]
+  _visibility?: 'full' | 'summary_actions' | 'metadata_only'
 }
 
 export interface MeetingAction {
