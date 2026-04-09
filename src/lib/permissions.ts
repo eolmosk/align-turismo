@@ -1,7 +1,7 @@
 import { UserRole } from '@/types'
 
 // Roles con acceso de gestión (pueden aprobar usuarios, invitar, cambiar roles)
-export const MANAGE_USERS_ROLES: UserRole[] = ['owner', 'director']
+export const MANAGE_USERS_ROLES: UserRole[] = ['owner', 'director', 'vicedirector']
 
 // Roles que ven todas las reuniones de la escuela (no solo las propias)
 export const SEE_ALL_MEETINGS_ROLES: UserRole[] = ['owner', 'director', 'vicedirector', 'coordinador']

@@ -48,7 +48,7 @@ export default function UsersPage() {
     if (status === 'unauthenticated') { router.push('/auth'); return }
     if (status === 'authenticated') {
       const role = session?.user?.role
-      if (role !== 'owner' && role !== 'director') {
+      if (role !== 'owner' && role !== 'director' && role !== 'vicedirector') {
         router.push('/dashboard')
       }
     }
@@ -88,11 +88,16 @@ export default function UsersPage() {
       body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
     })
     setInviting(false)
-    if (!res.ok) { setInviteError('Error creando la invitación.'); return }
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      setInviteError(err?.error ?? 'Error creando la invitación.')
+      return
+    }
     const data = await res.json()
     setInviteLink(data.invite_url)
     setInvitations(prev => [data, ...prev])
     setInviteEmail('')
+    showToast('Invitación enviada por email')
   }
 
   if (loading) return (
