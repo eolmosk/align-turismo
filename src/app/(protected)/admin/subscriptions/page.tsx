@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { PLANS, PlanId, SubStatus } from '@/lib/subscription'
+import { PLANS, PlanId, SubStatus } from '@/lib/subscription-shared'
 
 interface Row {
   id: string
@@ -37,9 +37,11 @@ export default function AdminSubscriptionsPage() {
       .finally(() => setLoading(false))
   }, [session, status])
 
-  if (status === 'loading') return <Main>Cargando…</Main>
-  if (session?.user?.id !== OWNER_GLOBAL_ID) {
-    return <Main>Sin permisos.</Main>
+  if (status === 'loading') return <Main>Cargando sesión…</Main>
+  if (status === 'unauthenticated') return <Main>No autenticado.</Main>
+  if (!session?.user?.id) return <Main>Sin sesión de usuario.</Main>
+  if (session.user.id !== OWNER_GLOBAL_ID) {
+    return <Main>Sin permisos. (id: {session.user.id})</Main>
   }
 
   async function update(schoolId: string, patch: Record<string, any>) {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { PLANS, SubscriptionState } from '@/lib/subscription'
+import { PLANS, type SubscriptionState } from '@/lib/subscription-shared'
 
 type StateResp = SubscriptionState & { contactWhatsapp?: string }
 

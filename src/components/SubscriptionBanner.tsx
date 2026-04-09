@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { SubscriptionState } from '@/lib/subscription'
+import type { SubscriptionState } from '@/lib/subscription-shared'
 
 /**
  * Banner superior en el dashboard que avisa:
