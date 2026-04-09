@@ -83,6 +83,7 @@ Tablas principales:
 - **`contacts`** — agenda de la escuela.
 - **`invitations`** — invitaciones pendientes por email.
 - **`meeting_history`** — auditoría de cambios.
+- **`subscriptions`** — una fila por escuela. Campos: `plan` (`trial`|`solo`|`institucional`|`grupo_5`|`grupo_10`), `status` (`trialing`|`active`|`expired`|`canceled`), `trial_ends_at`, `active_until`, `notes`. Fase 0 del billing: gestión manual, sin Stripe todavía. La migración `012_subscriptions.sql` hace un backfill de escuelas preexistentes con `status='active'` y 30 días de gracia.
 - **`meeting_embeddings`** — vector `VECTOR(1536)` por reunión, generado con `text-embedding-3-small`. Soporta búsqueda semántica vía la función RPC `match_meetings(query_embedding, school_id_filter, match_count)`. Para volúmenes chicos (<1000 filas) se recomienda NO usar índice IVFFlat — con lists alto y pocas filas muchos clusters quedan vacíos y la búsqueda devuelve 0 resultados. Crear el índice recién al crecer, con `lists ≈ sqrt(N)`.
 
 Row Level Security (RLS) está activo en todas las tablas: cada query se filtra por `school_id` del usuario autenticado.
@@ -115,6 +116,8 @@ NextAuth con estrategia JWT y magic link por email (Resend).
 | `/api/search` | GET | Búsqueda global (texto) |
 | `/api/ask` | POST | Búsqueda conversacional: embed + `match_meetings` + Claude |
 | `/api/embeddings/backfill` | POST | Indexa reuniones pendientes (idempotente, `maxDuration=300`) |
+| `/api/billing/status` | GET | Devuelve estado de suscripción de la escuela activa + contactWhatsapp |
+| `/api/admin/subscriptions` | GET, PATCH | (owner global) lista y edita todas las suscripciones |
 | `/api/transcribe` | POST | Recibe blob de audio (FormData `file`), reenvía a Whisper (`whisper-1`, `language=es`), devuelve `{ text }`. Límite 25 MB. Sin persistencia. |
 | `/api/digest/weekly` | POST | Envío del digest semanal (Vercel cron, lunes) |
 

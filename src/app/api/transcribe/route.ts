@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { requireActiveSubscription } from '@/lib/subscription'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -17,6 +18,11 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.school_id) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const access = await requireActiveSubscription(session.user.school_id)
+  if (!access.ok) {
+    return NextResponse.json({ error: access.message }, { status: access.status })
   }
 
   const apiKey = process.env.OPENAI_API_KEY

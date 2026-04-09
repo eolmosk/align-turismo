@@ -86,6 +86,17 @@ Align se puede instalar en Android/iOS como app (agregar a pantalla de inicio). 
 ### 3.17 Preguntar — búsqueda conversacional
 Tab del Dashboard donde el usuario hace preguntas en lenguaje natural sobre el historial de reuniones. El sistema embebe la pregunta, busca por similitud semántica en los embeddings de las reuniones de la escuela, y Claude responde citando las fuentes. Limitado a 500 caracteres por pregunta, top 5 reuniones como contexto, respuestas de 2-4 párrafos.
 
+### 3.18 Billing manual (Fase 0)
+Cada escuela tiene una fila en `subscriptions` con plan, status, fecha de vencimiento del trial y fecha de vencimiento del pago. Al crearse una escuela nueva vía onboarding, se inserta automáticamente un trial de 14 días sin tarjeta.
+
+Cuando el trial o la suscripción vencen, los endpoints de mutación (crear reunión, generar IA, transcribir audio) devuelven 402 y el frontend muestra modo solo-lectura. Los GET siguen funcionando para que no se pierda acceso histórico.
+
+Los pagos se gestionan **manualmente** en esta fase: el director toca "Activar por WhatsApp" en `/billing`, Align recibe el mensaje, coordina el pago offline (transferencia / Mercado Pago / lo que corresponda), y el owner global marca la escuela como `active` con fecha `active_until` desde `/admin/subscriptions`.
+
+Planes disponibles: Solo (USD 19), Institucional (USD 99), Grupo 5 (USD 399), Grupo 10 (USD 749). Facturación mensual en USD.
+
+Cuando el volumen de clientes justifique la automatización se agregará integración con Mercado Pago (Fase 1) y eventualmente Stripe (Fase 3).
+
 ## 4. Flujos principales
 
 ### 4.1 Alta de un nuevo cliente (escuela)

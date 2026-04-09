@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { CreateMeetingInput } from '@/types'
 import { upsertMeetingEmbedding } from '@/lib/embeddings'
+import { requireActiveSubscription } from '@/lib/subscription'
 
 // GET /api/meetings — lista reuniones de la escuela del usuario
 export async function GET(req: NextRequest) {
@@ -47,6 +48,11 @@ export async function POST(req: NextRequest) {
 
   if (!body.title || !body.notes || !body.type) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+  }
+
+  const access = await requireActiveSubscription(session.user.school_id)
+  if (!access.ok) {
+    return NextResponse.json({ error: access.message }, { status: access.status })
   }
 
   const { data, error } = await supabaseAdmin

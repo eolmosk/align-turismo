@@ -151,6 +151,24 @@ Si administrás varias escuelas, `/dashboard/group` muestra:
 
 ---
 
+## 9b. Suscripción y planes
+
+Align se ofrece con **14 días de prueba gratis** para cada escuela nueva, sin tarjeta. Al crear la escuela ya arranca el trial.
+
+Durante el trial tenés todas las funciones habilitadas. Cuando se vence, la escuela entra en **modo solo lectura**: podés seguir viendo todo lo que ya creaste, pero no podés crear reuniones nuevas, usar IA, ni transcribir audio, hasta activar un plan.
+
+Para activar un plan: **dashboard → Suscripción** (o entrá directo a `/billing`). Ahí ves el plan actual, los días restantes de trial, y los 4 planes disponibles. Cada plan tiene un botón "Activar por WhatsApp" que abre un mensaje prellenado a Align. Respondemos y coordinamos el pago.
+
+Planes disponibles:
+- **Solo** — USD 19/mes — 1 usuario, 30 reuniones/mes, 3h de Whisper.
+- **Institucional** — USD 99/mes — hasta 10 usuarios, reuniones ilimitadas, 15h de Whisper.
+- **Grupo 5** — USD 399/mes — hasta 5 escuelas, 10 usuarios por escuela, 50h de Whisper totales.
+- **Grupo 10** — USD 749/mes — hasta 10 escuelas, 10 usuarios por escuela, 100h de Whisper totales.
+
+Facturación mensual en USD.
+
+---
+
 ## 10. Administración (`/admin`)
 
 Solo para owners. Permite:

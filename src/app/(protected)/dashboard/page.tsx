@@ -8,6 +8,7 @@ import SchoolSwitcher from '@/components/SchoolSwitcher'
 import SchoolLogo from '@/components/SchoolLogo'
 import AssigneePicker from '@/components/AssigneePicker'
 import WhatsNew from '@/components/WhatsNew'
+import SubscriptionBanner from '@/components/SubscriptionBanner'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
@@ -254,6 +255,8 @@ export default function Dashboard() {
           </div>
         )}
       </header>
+
+      <SubscriptionBanner />
 
       {/* Tabs */}
       <div className="bg-white border-b border-warm-100 px-4 sm:px-6 overflow-x-auto">

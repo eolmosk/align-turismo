@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { ensureTrial } from '@/lib/subscription'
 
 // POST /api/onboarding — completa el setup inicial del director
 export async function POST(req: NextRequest) {
@@ -54,6 +55,11 @@ export async function POST(req: NextRequest) {
       role: 'director',
     }, { onConflict: 'user_id,school_id' })
   } catch (_) { /* tabla puede no existir aún */ }
+
+  // 4. Crear trial de 14 días para la nueva escuela
+  try {
+    await ensureTrial(school.id)
+  } catch (_) { /* si falla no bloqueamos el onboarding */ }
 
   return NextResponse.json({ school })
 }

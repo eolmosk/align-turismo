@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
 import { MEETING_TYPE_LABELS, MeetingType, AIGenerateResponse } from '@/types'
+import { requireActiveSubscription } from '@/lib/subscription'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -15,6 +16,11 @@ export async function POST(req: NextRequest) {
 
   const { meetingId, isLiveTranscript } = await req.json()
   if (!meetingId) return NextResponse.json({ error: 'meetingId requerido' }, { status: 400 })
+
+  const access = await requireActiveSubscription(session.user.school_id)
+  if (!access.ok) {
+    return NextResponse.json({ error: access.message }, { status: access.status })
+  }
 
   const { data: meeting, error: meetingErr } = await supabaseAdmin
     .from('meetings')
