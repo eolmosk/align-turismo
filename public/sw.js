@@ -3,7 +3,7 @@
 // para assets estáticos. NO cacheamos respuestas de la API (siempre
 // network) para no mostrar datos viejos de reuniones/acciones.
 
-const CACHE_VERSION = 'align-v2'
+const CACHE_VERSION = 'align-v3'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 
 // Assets que queremos precachear (el resto entra on-demand).
