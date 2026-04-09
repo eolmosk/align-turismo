@@ -7,6 +7,7 @@ import ContactSelector from '@/components/ContactSelector'
 import SchoolSwitcher from '@/components/SchoolSwitcher'
 import SchoolLogo from '@/components/SchoolLogo'
 import AssigneePicker from '@/components/AssigneePicker'
+import WhatsNew from '@/components/WhatsNew'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
@@ -336,6 +337,8 @@ export default function Dashboard() {
           onCreated={(thread) => { setShowNewThread(false); router.push(`/thread/${thread.id}`) }}
         />
       )}
+
+      <WhatsNew />
     </div>
   )
 }
