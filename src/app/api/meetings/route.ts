@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       subject: body.subject ?? null,
       academic_year: body.academic_year ?? null,
       tags: body.tags ?? null,
-      topics: body.topics ?? null,
+      topic: body.topics ?? null,
     })
     .select()
     .single()

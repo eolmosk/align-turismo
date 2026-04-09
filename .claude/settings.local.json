@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npx tsc:*)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

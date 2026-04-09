@@ -147,10 +147,11 @@ Todas las rutas protegidas validan `getServerSession(authOptions)` y filtran por
 
 Flujo:
 1. Embed de la pregunta con `text-embedding-3-small` (1536 dims) vía `src/lib/embeddings.ts`.
-2. RPC `match_meetings` devuelve top 5 reuniones por similitud coseno filtradas por `school_id`.
-3. Se arma un contexto con cada reunión (`[Reunión N]` + metadata + resumen + compromisos + notas truncadas a 2000 chars).
-4. Claude Sonnet 4 responde en español rioplatense, citando `[Reunión N]`, limitado a 800 tokens.
-5. Se devuelve `{ answer, sources[] }`.
+2. RPC `match_meetings` devuelve top 10 reuniones por similitud coseno filtradas por `school_id`.
+3. Se consulta `meeting_participants` y se aplica `getMeetingVisibility()` a cada resultado. Reuniones con visibilidad `none` o `metadata_only` se descartan. Para `summary_actions` solo se incluye resumen y compromisos (sin notas ni participantes). Para `full` se incluye todo.
+4. Se arma un contexto con cada reunión visible (`[Reunión N]` + metadata + campos según visibilidad).
+5. Claude Sonnet 4 responde en español rioplatense, citando `[Reunión N]`, limitado a 800 tokens.
+6. Se devuelve `{ answer, sources[] }`.
 
 Los embeddings se generan fire-and-forget en POST `/api/meetings` y PATCH `/api/meetings/[id]` (cuando cambian campos de contenido). `upsertMeetingEmbedding` nunca lanza — loguea y sigue. Backfill vía `/api/embeddings/backfill`.
 

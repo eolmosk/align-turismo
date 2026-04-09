@@ -99,7 +99,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (visibility !== 'full') return NextResponse.json({ error: 'Sin permisos para editar' }, { status: 403 })
 
   const body = await req.json()
-  const { contact_ids, participant_user_ids, school_id, user_id, id, created_at, ...meetingFields } = body
+  const { contact_ids, participant_user_ids, school_id, user_id, id, created_at, topics, ...meetingFields } = body
+  if (topics !== undefined) meetingFields.topic = topics
 
   const { data, error } = await supabaseAdmin
     .from('meetings').update(meetingFields).eq('id', params.id).eq('school_id', session.user.school_id).select().single()

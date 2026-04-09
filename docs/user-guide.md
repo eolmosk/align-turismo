@@ -106,7 +106,7 @@ Barra de búsqueda global: busca por título de reunión, contenido, nombres de 
 ### 6.2 Preguntar (búsqueda conversacional con IA)
 Tab **Preguntar** en el Dashboard. Escribí una pregunta en lenguaje natural sobre el historial de reuniones (ej: "¿qué compromisos quedaron con la familia García?", "¿qué proyectos usan Canva?") y la IA te responde citando las reuniones relevantes con links directos.
 
-Cómo funciona: cada reunión tiene un "embedding" semántico; la pregunta se compara con esos embeddings y se eligen las más cercanas; Claude responde usando solo ese contexto. Si no hay información suficiente, lo dice honestamente.
+Cómo funciona: cada reunión tiene un "embedding" semántico; la pregunta se compara con esos embeddings y se eligen las más cercanas. Solo se incluyen en la respuesta las reuniones que tenés permiso de ver según tu rol (ver sección 1.2b). Si solo tenés acceso al resumen de una reunión, la IA usa únicamente ese resumen para responder. Si no hay información suficiente, lo dice honestamente.
 
 ---
 

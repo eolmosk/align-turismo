@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
 import { generateEmbedding } from '@/lib/embeddings'
+import { getMeetingVisibility, type MeetingVisibility } from '@/lib/visibility'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -40,11 +41,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error generando embedding' }, { status: 500 })
   }
 
-  // 2. Vector search
+  // 2. Pre-computar IDs de reuniones visibles para este usuario
+  const userId = session.user.id
+  const userRole = session.user.role
+  const LEADERSHIP = ['owner', 'director', 'vicedirector']
+
+  // Para no-leadership: solo buscar en reuniones que creó o en las que participa
+  let allowedIds: string[] | null = null
+  if (!LEADERSHIP.includes(userRole)) {
+    // Reuniones que creó
+    const { data: created } = await supabaseAdmin
+      .from('meetings')
+      .select('id')
+      .eq('school_id', session.user.school_id)
+      .eq('user_id', userId)
+    const createdIds = (created ?? []).map(m => m.id)
+
+    // Reuniones donde participa
+    const { data: participated } = await supabaseAdmin
+      .from('meeting_participants')
+      .select('meeting_id')
+      .eq('user_id', userId)
+    const participatedIds = (participated ?? []).map(p => p.meeting_id)
+
+    allowedIds = Array.from(new Set([...createdIds, ...participatedIds]))
+
+    if (allowedIds.length === 0) {
+      return NextResponse.json({
+        answer: 'No tenés reuniones registradas todavía para consultar.',
+        sources: [],
+      })
+    }
+  }
+
+  // 3. Vector search — filtrado en la DB por IDs permitidos
   const { data: matches, error: matchError } = await supabaseAdmin.rpc('match_meetings', {
     query_embedding: queryEmbedding as any,
     school_id_filter: session.user.school_id,
     match_count: 5,
+    allowed_ids: allowedIds,
   })
 
   if (matchError) {
@@ -59,33 +94,66 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // 3. Traer las reuniones completas
+  // 4. Traer las reuniones completas
   const meetingIds = (matches as any[]).map((m) => m.meeting_id)
   const { data: meetings } = await supabaseAdmin
     .from('meetings')
-    .select('id, title, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, thread_id, threads(name)')
+    .select('id, title, type, meeting_date, participants, notes, ai_summary, ai_questions, ai_commitments, thread_id, user_id, threads(name)')
     .in('id', meetingIds)
 
   if (!meetings || meetings.length === 0) {
     return NextResponse.json({ answer: 'No se encontraron reuniones.', sources: [] })
   }
 
-  // Ordenar por similitud
-  const byId = new Map((meetings as any[]).map((m) => [m.id, m]))
-  const ordered = meetingIds.map((id) => byId.get(id)).filter(Boolean)
+  // Determinar visibilidad por reunión (para saber qué campos incluir en el contexto)
+  const participantSet = new Set<string>()
+  if (meetingIds.length > 0) {
+    const { data: parts } = await supabaseAdmin
+      .from('meeting_participants')
+      .select('meeting_id')
+      .eq('user_id', userId)
+      .in('meeting_id', meetingIds)
+    for (const p of parts ?? []) participantSet.add(p.meeting_id)
+  }
 
-  // 4. Contexto para Claude
-  const context = ordered.map((m: any, i: number) => {
+  const byId = new Map((meetings as any[]).map((m) => [m.id, m]))
+  const ordered: Array<{ meeting: any; visibility: MeetingVisibility }> = []
+  for (const id of meetingIds) {
+    const m = byId.get(id)
+    if (!m) continue
+    const vis = getMeetingVisibility({
+      userRole, userId, meetingUserId: (m as any).user_id,
+      isParticipant: participantSet.has((m as any).id),
+    })
+    // Ya filtrados en la DB, pero por seguridad descartamos none/metadata_only
+    if (vis === 'none' || vis === 'metadata_only') continue
+    ordered.push({ meeting: m, visibility: vis })
+  }
+
+  if (ordered.length === 0) {
+    return NextResponse.json({
+      answer: 'No encontré reuniones visibles relacionadas con tu pregunta.',
+      sources: [],
+    })
+  }
+
+  // 4. Contexto para Claude — respetando nivel de visibilidad
+  const context = ordered.map(({ meeting: m, visibility: vis }, i: number) => {
     const parts = [
       `[Reunión ${i + 1}] ${m.title}`,
       `Fecha: ${m.meeting_date}`,
       `Tipo: ${m.type}`,
     ]
     if (m.threads?.name) parts.push(`Hilo: ${m.threads.name}`)
-    if (m.participants) parts.push(`Participantes: ${m.participants}`)
-    if (m.ai_summary) parts.push(`Resumen: ${m.ai_summary}`)
-    if (m.ai_commitments?.length) parts.push(`Compromisos: ${m.ai_commitments.join(' | ')}`)
-    if (m.notes) parts.push(`Notas: ${m.notes.slice(0, 2000)}`)
+    if (vis === 'full') {
+      if (m.participants) parts.push(`Participantes: ${m.participants}`)
+      if (m.ai_summary) parts.push(`Resumen: ${m.ai_summary}`)
+      if (m.ai_commitments?.length) parts.push(`Compromisos: ${m.ai_commitments.join(' | ')}`)
+      if (m.notes) parts.push(`Notas: ${m.notes.slice(0, 2000)}`)
+    } else if (vis === 'summary_actions') {
+      if (m.ai_summary) parts.push(`Resumen: ${m.ai_summary}`)
+      if (m.ai_commitments?.length) parts.push(`Compromisos: ${m.ai_commitments.join(' | ')}`)
+    }
     return parts.join('\n')
   }).join('\n\n---\n\n')
 
@@ -125,7 +193,7 @@ Pregunta: ${question}`
     const textBlock = response.content.find((b) => b.type === 'text') as any
     const answer = textBlock?.text ?? 'No pude generar una respuesta.'
 
-    const sources = ordered.map((m: any) => ({
+    const sources = ordered.map(({ meeting: m }) => ({
       id: m.id,
       title: m.title,
       meeting_date: m.meeting_date,

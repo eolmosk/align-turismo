@@ -96,7 +96,7 @@ Nuevo modo de entrada "Audio HD" en `/meeting/new`: graba con `MediaRecorder` de
 Align se puede instalar en Android/iOS como app (agregar a pantalla de inicio). Corre en modo standalone (sin barra del navegador), con ícono propio, splash y color de tema. Service worker mínimo cachea assets estáticos para carga rápida; las APIs siempre van a red para no mostrar datos viejos. Shortcuts: "Nueva reunión" y "Hoy" desde la home del sistema.
 
 ### 3.17 Preguntar — búsqueda conversacional
-Tab del Dashboard donde el usuario hace preguntas en lenguaje natural sobre el historial de reuniones. El sistema embebe la pregunta, busca por similitud semántica en los embeddings de las reuniones de la escuela, y Claude responde citando las fuentes. Limitado a 500 caracteres por pregunta, top 5 reuniones como contexto, respuestas de 2-4 párrafos.
+Tab del Dashboard donde el usuario hace preguntas en lenguaje natural sobre el historial de reuniones. El sistema embebe la pregunta, busca por similitud semántica en los embeddings de las reuniones de la escuela (top 10), y filtra los resultados por visibilidad del usuario antes de pasarlos a Claude. Las reuniones con visibilidad `none` o `metadata_only` se excluyen; las de `summary_actions` solo aportan resumen y compromisos (sin notas). Claude responde citando las fuentes visibles. Limitado a 500 caracteres por pregunta, respuestas de 2-4 párrafos.
 
 ### 3.18 Billing manual (Fase 0)
 Cada escuela tiene una fila en `subscriptions` con plan, status, fecha de vencimiento del trial y fecha de vencimiento del pago. Al crearse una escuela nueva vía onboarding, se inserta automáticamente un trial de 14 días sin tarjeta.

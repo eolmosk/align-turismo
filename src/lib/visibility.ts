@@ -41,17 +41,24 @@ export function getMeetingVisibility(input: VisibilityInput): MeetingVisibility 
 const METADATA_FIELDS = ['id', 'school_id', 'user_id', 'thread_id', 'title', 'type', 'meeting_date', 'participants', 'created_at', 'updated_at', 'meeting_contacts'] as const
 const SUMMARY_FIELDS = [...METADATA_FIELDS, 'ai_summary', 'meeting_actions', 'next_date', 'next_time', 'next_duration', 'course', 'subject', 'academic_year', 'tags', 'topics'] as const
 
-export function stripMeetingFields(meeting: any, visibility: MeetingVisibility): any {
-  if (visibility === 'full') return { ...meeting, _visibility: 'full' }
+function normalizeMeeting(m: any): any {
+  // BD usa 'topic' (TEXT[]), el frontend espera 'topics'
+  const { topic, ...rest } = m
+  return { ...rest, topics: topic ?? null }
+}
 
+export function stripMeetingFields(meeting: any, visibility: MeetingVisibility): any {
+  if (visibility === 'full') return { ...normalizeMeeting(meeting), _visibility: 'full' }
+
+  const normalized = normalizeMeeting(meeting)
   const allowedFields = visibility === 'summary_actions' ? SUMMARY_FIELDS : METADATA_FIELDS
   const stripped: any = { _visibility: visibility }
   for (const field of allowedFields) {
-    if (field in meeting) stripped[field] = meeting[field]
+    if (field in normalized) stripped[field] = normalized[field]
   }
   // Rename actions key if present
-  if (visibility === 'summary_actions' && meeting.meeting_actions) {
-    stripped.meeting_actions = meeting.meeting_actions
+  if (visibility === 'summary_actions' && normalized.meeting_actions) {
+    stripped.meeting_actions = normalized.meeting_actions
   }
   return stripped
 }
