@@ -527,7 +527,7 @@ function EditThreadModal({ thread, onClose, onSaved }: {
   const [subject, setSubject] = useState(thread.subject ?? '')
   const [academicYear, setAcademicYear] = useState(thread.academic_year ? String(thread.academic_year) : '')
   const [tagsInput, setTagsInput] = useState((thread.tags ?? []).join(', '))
-  const [topic, setTopic] = useState(thread.topic ?? '')
+  const [topics, setTopics] = useState<string[]>(thread.topics ?? [])
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>(
     ((thread as any).thread_contacts as any[] ?? []).map((tc: any) => tc.contact).filter(Boolean)
   )
@@ -548,7 +548,7 @@ function EditThreadModal({ thread, onClose, onSaved }: {
         subject: subject.trim() || null,
         academic_year: academicYear ? Number(academicYear) : null,
         tags: tagsInput.trim() ? tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : null,
-        topic: topic || null,
+        topics: topics.length ? topics : null,
         contact_ids: selectedContacts.map(c => c.id),
       }),
     })

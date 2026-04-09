@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const body: CreateMeetingInput & { contact_ids?: string[]; topic?: string; participant_user_ids?: string[] } = await req.json()
+  const body: CreateMeetingInput & { contact_ids?: string[]; topics?: string[]; participant_user_ids?: string[] } = await req.json()
 
   if (!body.title || !body.notes || !body.type) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       subject: body.subject ?? null,
       academic_year: body.academic_year ?? null,
       tags: body.tags ?? null,
-      topic: body.topic ?? null,
+      topics: body.topics ?? null,
     })
     .select()
     .single()

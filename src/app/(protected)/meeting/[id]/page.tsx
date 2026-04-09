@@ -644,7 +644,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
   const [subject, setSubject] = useState(meeting.subject ?? '')
   const [academicYear, setAcademicYear] = useState(meeting.academic_year ? String(meeting.academic_year) : '')
   const [tagsInput, setTagsInput] = useState((meeting.tags ?? []).join(', '))
-  const [topic, setTopic] = useState(meeting.topic ?? '')
+  const [topics, setTopics] = useState<string[]>(meeting.topics ?? [])
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>(
     ((meeting as any).meeting_contacts as any[] ?? []).map((mc: any) => mc.contact).filter(Boolean)
   )
@@ -701,7 +701,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
         subject: subject.trim() || null,
         academic_year: academicYear ? Number(academicYear) : null,
         tags: tagsInput.trim() ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : null,
-        topic: topic || null,
+        topics: topics.length ? topics : null,
         contact_ids: selectedContacts.map(c => c.id),
       }),
     })
@@ -833,9 +833,9 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
               <label className="text-xs text-warm-400 block mb-1.5">Tema</label>
               <div className="flex flex-wrap gap-1.5">
                 {TOPICS.map(t => (
-                  <button key={t} type="button" onClick={() => setTopic(topic === t ? '' : t)}
+                  <button key={t} type="button" onClick={() => setTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
                     className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      topic === t ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
+                      topics.includes(t) ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
                     }`}>
                     {TOPIC_LABELS[t as keyof typeof TOPIC_LABELS]}
                   </button>

@@ -63,7 +63,7 @@ export interface Thread {
   subject: string | null
   academic_year: number | null
   tags: string[] | null
-  topic: MeetingTopic | null
+  topics: MeetingTopic[] | null
   created_at: string
   contacts?: Contact[]
 }
@@ -92,7 +92,7 @@ export interface Meeting {
   subject: string | null
   academic_year: number | null
   tags: string[] | null
-  topic: MeetingTopic | null
+  topics: MeetingTopic[] | null
   created_at: string
   updated_at: string
   // joined

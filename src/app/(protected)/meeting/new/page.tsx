@@ -48,7 +48,7 @@ function NewMeetingContent() {
   const [subject, setSubject] = useState('')
   const [academicYear, setAcademicYear] = useState('')
   const [tagsInput, setTagsInput] = useState('')
-  const [topic, setTopic] = useState('')
+  const [topics, setTopics] = useState<string[]>([])
 
   // Clasificación colapsada
   const [showClassification, setShowClassification] = useState(false)
@@ -186,7 +186,7 @@ function NewMeetingContent() {
           subject: subject.trim() || undefined,
           academic_year: academicYear ? Number(academicYear) : undefined,
           tags: tagsInput.trim() ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : undefined,
-          topic: topic || undefined,
+          topics: topics.length ? topics : undefined,
           contact_ids: selectedContacts.length > 0 ? selectedContacts.map(c => c.id) : undefined,
         }),
       })
@@ -440,7 +440,7 @@ function NewMeetingContent() {
             className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-warm-50 transition-colors text-left">
             <span className="text-xs font-medium text-warm-500 uppercase tracking-wide">
               Clasificación <span className="text-warm-400 normal-case font-normal">(opcional)</span>
-              {(topic || course || subject) && <span className="ml-2 text-brand normal-case font-normal">· completada</span>}
+              {(topics.length || course || subject) && <span className="ml-2 text-brand normal-case font-normal">· completada</span>}
             </span>
             <svg className={`w-4 h-4 text-warm-400 transition-transform ${showClassification ? 'rotate-180' : ''}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -453,9 +453,9 @@ function NewMeetingContent() {
                 <label className="text-xs text-warm-400 block mb-1.5">Tema</label>
                 <div className="flex flex-wrap gap-1.5">
                   {TOPICS.map(t => (
-                    <button key={t} type="button" onClick={() => setTopic(topic === t ? '' : t)}
+                    <button key={t} type="button" onClick={() => setTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
                       className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                        topic === t ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
+                        topics.includes(t) ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
                       }`}>
                       {TOPIC_LABELS[t as keyof typeof TOPIC_LABELS]}
                     </button>

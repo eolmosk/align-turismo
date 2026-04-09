@@ -19,7 +19,7 @@ interface ThreadSummary {
   id: string
   name: string
   type: MeetingType
-  topic: string | null
+  topics: string[] | null
   participants: string | null
   description: string | null
   course: string | null
@@ -373,7 +373,7 @@ function HilosTab({ threads, onNewThread, onUnarchive }: { threads: ThreadSummar
   }
 
   const filtered = threads.filter(t => {
-    if (filterTopic && t.topic !== filterTopic) return false
+    if (filterTopic && !(t.topics ?? []).includes(filterTopic)) return false
     if (search) {
       const q = search.toLowerCase()
       const contactStr = (t.contactNames ?? []).join(' ')
@@ -382,7 +382,7 @@ function HilosTab({ threads, onNewThread, onUnarchive }: { threads: ThreadSummar
     return true
   })
 
-  const topicsInUse = Array.from(new Set(threads.map(t => t.topic).filter(Boolean))) as string[]
+  const topicsInUse = Array.from(new Set(threads.flatMap(t => t.topics ?? []).filter(Boolean))) as string[]
 
   return (
     <div>
@@ -955,7 +955,7 @@ function NewThreadModal({ onClose, onCreated }: {
   const [name, setName] = useState('')
   const [type, setType] = useState<MeetingType>('individual')
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([])
-  const [topic, setTopic] = useState('')
+  const [topics, setTopics] = useState<string[]>([])
   const [description, setDescription] = useState('')
   const [course, setCourse] = useState('')
   const [subject, setSubject] = useState('')
@@ -979,7 +979,7 @@ function NewThreadModal({ onClose, onCreated }: {
         subject: subject.trim() || undefined,
         academic_year: academicYear ? Number(academicYear) : undefined,
         tags,
-        topic: topic || undefined,
+        topics: topics.length ? topics : undefined,
         contact_ids: selectedContacts.map(c => c.id),
       }),
     })
@@ -1023,12 +1023,12 @@ function NewThreadModal({ onClose, onCreated }: {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-2">Tema principal <span className="text-warm-400 normal-case font-normal">(opcional)</span></label>
+            <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-2">Temas <span className="text-warm-400 normal-case font-normal">(opcional, podés elegir varios)</span></label>
             <div className="flex gap-2 flex-wrap">
               {TOPICS.map(t => (
-                <button key={t} type="button" onClick={() => setTopic(topic === t ? '' : t)}
+                <button key={t} type="button" onClick={() => setTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    topic === t ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
+                    topics.includes(t) ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
                   }`}>
                   {TOPIC_LABELS[t]}
                 </button>

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const { name, type, participants, description, course, subject, academic_year, tags, topic, contact_ids } = await req.json()
+  const { name, type, participants, description, course, subject, academic_year, tags, topics, contact_ids } = await req.json()
 
   if (!name?.trim() || !type) {
     return NextResponse.json({ error: 'Nombre y tipo son requeridos' }, { status: 400 })
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       subject: subject?.trim() || null,
       academic_year: academic_year ?? null,
       tags: tags ?? null,
-      topic: topic ?? null,
+      topics: topics ?? null,
     })
     .select()
     .single()
