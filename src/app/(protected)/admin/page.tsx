@@ -432,9 +432,14 @@ export default function AdminPage() {
             <h1 className="text-sm sm:text-base font-semibold text-gray-900">Panel de administración</h1>
             <p className="text-[11px] sm:text-xs text-gray-400 truncate">Align &middot; Gestión de escuelas y usuarios</p>
           </div>
-          <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap flex-shrink-0">
-            Volver
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/admin/subscriptions" className="text-xs text-gray-500 hover:text-gray-900 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap">
+              Suscripciones
+            </Link>
+            <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap">
+              Volver
+            </Link>
+          </div>
         </div>
       </header>
 
