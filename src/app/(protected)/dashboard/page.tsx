@@ -588,15 +588,14 @@ function ReunionesTab({
   }, [filtered])
 
   const hasFilters = search || filterCourse || filterSubject || filterYear || filterTag
+  const [showFilters, setShowFilters] = useState(false)
+  const activeFilterCount = [filterCourse, filterSubject, filterYear, filterTag].filter(Boolean).length
 
   if (loading) return (
     <div className="flex items-center justify-center py-24">
       <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
     </div>
   )
-
-  const [showFilters, setShowFilters] = useState(false)
-  const activeFilterCount = [filterCourse, filterSubject, filterYear, filterTag].filter(Boolean).length
 
   return (
     <div>
