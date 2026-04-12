@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { PLANS } from '@/lib/subscription-shared'
 
+export const dynamic = 'force-dynamic'
+
 const ADMIN_USER_ID = '757692ca-333e-469d-a9eb-d370db452cde'
 
 export async function GET() {
@@ -45,6 +47,9 @@ export async function GET() {
   const meetings = meetingsRes.data ?? []
   const pendingActions = actionsRes.data ?? []
   const subscriptions = subsRes.data ?? []
+  if (schoolsRes.error) console.error('[analytics] schools query error:', schoolsRes.error)
+  if (subsRes.error) console.error('[analytics] subscriptions query error:', subsRes.error)
+  console.log('[analytics] schools:', schoolsRes.data?.length, 'subs:', subsRes.data?.length)
   const schoolNames = new Map((schoolsRes.data ?? []).map(s => [s.id, s.name]))
 
   // Suscripciones por escuela
