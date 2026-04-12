@@ -3,12 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 
-export default async function Home({ searchParams }: { searchParams: { landing?: string } }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ landing?: string }> | { landing?: string } }) {
   const session = await getServerSession(authOptions)
-  if (session && searchParams.landing !== 'true') redirect('/dashboard')
+  const params = await Promise.resolve(searchParams)
+  if (session && params.landing !== 'true') redirect('/dashboard')
 
   const whatsapp = process.env.CONTACT_WHATSAPP ?? ''
   const calendly = process.env.CONTACT_CALENDLY ?? ''
+  const isLoggedIn = !!session
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Neue Montreal', -apple-system, BlinkMacSystemFont, sans-serif" }}>
@@ -20,10 +22,10 @@ export default async function Home({ searchParams }: { searchParams: { landing?:
             <img src="/align-logo.png" alt="Align" className="h-8" />
           </div>
           <Link
-            href="/auth"
+            href={isLoggedIn ? '/dashboard' : '/auth'}
             className="text-sm font-medium text-white bg-[#1a1a2e] px-5 py-2.5 rounded-lg hover:bg-[#16213e] transition-colors"
           >
-            Ingresar
+            {isLoggedIn ? 'Volver al dashboard' : 'Ingresar'}
           </Link>
         </div>
       </nav>
