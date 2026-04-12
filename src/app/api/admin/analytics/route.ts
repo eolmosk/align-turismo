@@ -27,7 +27,7 @@ export async function GET() {
       .select('user_id, school_id, role, schools:school_id ( name )'),
     supabaseAdmin
       .from('meetings')
-      .select('id, user_id, school_id, input_method, ai_questions, next_date'),
+      .select('id, user_id, school_id, input_method, ai_questions, next_date, audio_seconds'),
     supabaseAdmin
       .from('meeting_actions')
       .select('id, done, meetings!inner( user_id )')
@@ -65,14 +65,14 @@ export async function GET() {
     if (planDef) planBySchool.set(s.school_id, planDef)
   }
 
-  // Whisper y AI usage por escuela
-  const whisperBySchool = new Map<string, number>()
+  // Whisper (segundos → horas) y AI usage por escuela
+  const whisperSecondsBySchool = new Map<string, number>()
   const aiBySchool = new Map<string, number>()
   for (const m of meetings) {
     const sid = m.school_id
     if (!sid) continue
     if (m.input_method === 'audio' || m.input_method === 'voice') {
-      whisperBySchool.set(sid, (whisperBySchool.get(sid) ?? 0) + 1)
+      whisperSecondsBySchool.set(sid, (whisperSecondsBySchool.get(sid) ?? 0) + ((m as any).audio_seconds ?? 0))
     }
     if (m.ai_questions) {
       aiBySchool.set(sid, (aiBySchool.get(sid) ?? 0) + 1)
@@ -99,7 +99,7 @@ export async function GET() {
       status: s.status,
       daysLeft,
       whisperLimit: plan?.whisperHours ?? 0,
-      whisperUsed: whisperBySchool.get(s.school_id) ?? 0,
+      whisperUsed: Math.round((whisperSecondsBySchool.get(s.school_id) ?? 0) / 36) / 100, // horas con 2 decimales
       aiUsed: aiBySchool.get(s.school_id) ?? 0,
     }
     schoolsData[s.school_id] = sub
@@ -108,7 +108,7 @@ export async function GET() {
 
   // Métricas por usuario desde meetings
   const meetingsByUser = new Map<string, number>()
-  const whisperByUser = new Map<string, number>()
+  const whisperSecsByUser = new Map<string, number>()
   const aiByUser = new Map<string, number>()
   const scheduledByUser = new Map<string, number>()
 
@@ -117,7 +117,7 @@ export async function GET() {
     if (!uid) continue
     meetingsByUser.set(uid, (meetingsByUser.get(uid) ?? 0) + 1)
     if (m.input_method === 'audio' || m.input_method === 'voice') {
-      whisperByUser.set(uid, (whisperByUser.get(uid) ?? 0) + 1)
+      whisperSecsByUser.set(uid, (whisperSecsByUser.get(uid) ?? 0) + ((m as any).audio_seconds ?? 0))
     }
     if (m.ai_questions) {
       aiByUser.set(uid, (aiByUser.get(uid) ?? 0) + 1)
@@ -152,7 +152,7 @@ export async function GET() {
       meetingsCreated: meetingsByUser.get(u.id) ?? 0,
       pendingActions: pendingByUser.get(u.id) ?? 0,
       scheduledMeetings: scheduledByUser.get(u.id) ?? 0,
-      whisperUsage: whisperByUser.get(u.id) ?? 0,
+      whisperUsage: Math.round((whisperSecsByUser.get(u.id) ?? 0) / 36) / 100,
       aiUsage: aiByUser.get(u.id) ?? 0,
       subscription: sub,
     }
@@ -163,7 +163,7 @@ export async function GET() {
     totalMeetings: meetings.length,
     totalPendingActions: pendingActions.length,
     totalScheduled: meetings.filter(m => m.next_date && m.next_date >= today).length,
-    totalWhisper: meetings.filter(m => m.input_method === 'audio' || m.input_method === 'voice').length,
+    totalWhisper: Math.round(meetings.reduce((acc, m) => acc + ((m.input_method === 'audio' || m.input_method === 'voice') ? ((m as any).audio_seconds ?? 0) : 0), 0) / 36) / 100,
     totalAI: meetings.filter(m => m.ai_questions).length,
   }
 

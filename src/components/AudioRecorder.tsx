@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 interface Props {
-  onTranscribed: (text: string) => void
+  onTranscribed: (text: string, audioSeconds: number) => void
 }
 
 type State = 'idle' | 'recording' | 'paused' | 'uploading' | 'error'
@@ -120,7 +120,7 @@ export default function AudioRecorder({ onTranscribed }: Props) {
       const res = await fetch('/api/transcribe', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error')
-      onTranscribed(data.text ?? '')
+      onTranscribed(data.text ?? '', data.audioSeconds ?? 0)
       setState('idle')
       setElapsed(0)
     } catch (e: any) {

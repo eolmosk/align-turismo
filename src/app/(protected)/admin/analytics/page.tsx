@@ -107,7 +107,7 @@ export default function AdminAnalytics() {
     { label: 'Reuniones', value: global.totalMeetings, color: 'text-warm-700' },
     { label: 'Pendientes', value: global.totalPendingActions, color: 'text-amber-600' },
     { label: 'Agendadas', value: global.totalScheduled, color: 'text-green-600' },
-    { label: 'Whisper', value: global.totalWhisper, color: 'text-purple-600' },
+    { label: 'Whisper (h)', value: global.totalWhisper, color: 'text-purple-600' },
     { label: 'IA procesadas', value: global.totalAI, color: 'text-brand-600' },
   ] : []
 
@@ -181,7 +181,7 @@ export default function AdminAnalytics() {
                         color={sg.sub.whisperUsed / (sg.sub.whisperLimit || 1) > 0.8 ? '#dc2626' : '#7c3aed'}
                         label="Whisper"
                       />
-                      <p className="text-xs text-warm-500 mt-1">{sg.sub.whisperUsed}/{sg.sub.whisperLimit}h</p>
+                      <p className="text-xs text-warm-500 mt-1">{sg.sub.whisperUsed}h / {sg.sub.whisperLimit}h</p>
                     </div>
 
                     {/* Gauge IA */}
@@ -316,7 +316,7 @@ export default function AdminAnalytics() {
           </div>
 
           <p className="text-xs text-warm-400 mt-3">
-            Whisper = reuniones con audio transcrito. IA = reuniones procesadas con preguntas de seguimiento. Sub = días restantes de suscripción.
+            Whisper = horas de audio transcritas con Whisper. IA = reuniones procesadas con preguntas de seguimiento. Sub = días restantes de suscripción.
           </p>
         </section>
       </main>

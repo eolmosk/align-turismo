@@ -61,6 +61,7 @@ function NewMeetingContent() {
   const [nextTime, setNextTime] = useState('09:00')
   const [nextDuration, setNextDuration] = useState(60)
   const [schedulingNext, setSchedulingNext] = useState(false)
+  const [audioSeconds, setAudioSeconds] = useState(0)
 
   // Estado general
   const [saving, setSaving] = useState(false)
@@ -188,6 +189,7 @@ function NewMeetingContent() {
           tags: tagsInput.trim() ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : undefined,
           topics: topics.length ? topics : undefined,
           contact_ids: selectedContacts.length > 0 ? selectedContacts.map(c => c.id) : undefined,
+          audio_seconds: audioSeconds > 0 ? audioSeconds : undefined,
         }),
       })
       if (!res.ok) throw new Error('Error guardando la reunión')
@@ -568,8 +570,9 @@ function NewMeetingContent() {
 
           {inputMethod === 'audio' && !liveMode && (
             <div>
-              <AudioRecorder onTranscribed={(text) => {
+              <AudioRecorder onTranscribed={(text, secs) => {
                 setNotes((prev) => prev ? `${prev}\n\n${text}` : text)
+                setAudioSeconds((prev) => prev + secs)
                 setInputMethod('text')
               }} />
               {notes && (

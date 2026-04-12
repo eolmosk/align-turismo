@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   fd.append('file', file, (file as any).name ?? 'audio.webm')
   fd.append('model', 'whisper-1')
   fd.append('language', 'es')
-  fd.append('response_format', 'json')
+  fd.append('response_format', 'verbose_json')
 
   try {
     const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -65,7 +65,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Error de transcripción' }, { status: 500 })
     }
     const data = await res.json()
-    return NextResponse.json({ text: data.text ?? '' })
+    const audioSeconds = Math.ceil(data.duration ?? 0)
+    return NextResponse.json({ text: data.text ?? '', audioSeconds })
   } catch (e: any) {
     console.error('transcribe: fetch error', e?.message)
     return NextResponse.json({ error: 'Error consultando Whisper' }, { status: 500 })

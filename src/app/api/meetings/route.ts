@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
       academic_year: body.academic_year ?? null,
       tags: body.tags ?? null,
       topic: body.topics ?? null,
+      audio_seconds: body.audio_seconds ?? null,
     })
     .select()
     .single()
