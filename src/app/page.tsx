@@ -3,9 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: { landing?: string } }) {
   const session = await getServerSession(authOptions)
-  if (session) redirect('/dashboard')
+  if (session && searchParams.landing !== 'true') redirect('/dashboard')
 
   const whatsapp = process.env.CONTACT_WHATSAPP ?? ''
   const calendly = process.env.CONTACT_CALENDLY ?? ''

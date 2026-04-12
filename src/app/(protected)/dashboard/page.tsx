@@ -252,7 +252,7 @@ export default function Dashboard() {
                       Suscripción
                     </Link>
                     <div className="border-t border-warm-100 mt-1 pt-1">
-                      <a href="/" onClick={() => setShowMobileMenu(false)}
+                      <a href="/?landing=true" onClick={() => setShowMobileMenu(false)}
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-warm-500 hover:bg-warm-50">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
