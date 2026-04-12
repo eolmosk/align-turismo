@@ -15,7 +15,7 @@ export async function GET() {
   const today = new Date().toISOString().split('T')[0]
 
   // Todas las queries en paralelo
-  const [usersRes, membershipsRes, meetingsRes, actionsRes, subsRes] = await Promise.all([
+  const [usersRes, membershipsRes, meetingsRes, actionsRes, subsRes, schoolsRes] = await Promise.all([
     supabaseAdmin
       .from('users')
       .select('id, email, name, role, status, school_id, created_at')
@@ -33,6 +33,9 @@ export async function GET() {
     supabaseAdmin
       .from('subscriptions')
       .select('school_id, plan, status, trial_ends_at, active_until'),
+    supabaseAdmin
+      .from('schools')
+      .select('id, name'),
   ])
 
   if (usersRes.error) return NextResponse.json({ error: usersRes.error.message }, { status: 500 })
@@ -42,6 +45,7 @@ export async function GET() {
   const meetings = meetingsRes.data ?? []
   const pendingActions = actionsRes.data ?? []
   const subscriptions = subsRes.data ?? []
+  const schoolNames = new Map((schoolsRes.data ?? []).map(s => [s.id, s.name]))
 
   // Suscripciones por escuela
   const subBySchool = new Map<string, any>()
@@ -80,11 +84,12 @@ export async function GET() {
 
   // Armar info de escuelas para la respuesta
   const schoolsData: Record<string, any> = {}
+  const schoolsList: any[] = []
   for (const s of subscriptions) {
     const plan = PLANS.find(p => p.id === s.plan)
     const endDate = s.status === 'trialing' ? s.trial_ends_at : s.active_until
     const daysLeft = endDate ? Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000) : null
-    schoolsData[s.school_id] = {
+    const sub = {
       plan: s.plan,
       status: s.status,
       daysLeft,
@@ -92,6 +97,8 @@ export async function GET() {
       whisperUsed: whisperBySchool.get(s.school_id) ?? 0,
       aiUsed: aiBySchool.get(s.school_id) ?? 0,
     }
+    schoolsData[s.school_id] = sub
+    schoolsList.push({ school_id: s.school_id, name: schoolNames.get(s.school_id) ?? s.school_id, sub })
   }
 
   // Métricas por usuario desde meetings
@@ -155,5 +162,5 @@ export async function GET() {
     totalAI: meetings.filter(m => m.ai_questions).length,
   }
 
-  return NextResponse.json({ global, users: enrichedUsers })
+  return NextResponse.json({ global, users: enrichedUsers, schools: schoolsList })
 }

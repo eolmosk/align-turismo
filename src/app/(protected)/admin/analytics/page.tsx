@@ -47,6 +47,7 @@ export default function AdminAnalytics() {
   const router = useRouter()
   const [global, setGlobal] = useState<GlobalStats | null>(null)
   const [users, setUsers] = useState<UserAnalytics[]>([])
+  const [schools, setSchools] = useState<Array<{ school_id: string; name: string; sub: SubscriptionInfo }>>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortKey>('meetingsCreated')
@@ -64,6 +65,7 @@ export default function AdminAnalytics() {
       .then(data => {
         setGlobal(data.global)
         setUsers(data.users ?? [])
+        setSchools(data.schools ?? [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -93,19 +95,6 @@ export default function AdminAnalytics() {
     return list
   }, [users, search, sortBy, sortAsc])
 
-  // Agrupar escuelas únicas para gauges
-  const schoolGauges = useMemo(() => {
-    const seen = new Map<string, { name: string; sub: SubscriptionInfo }>()
-    for (const u of users) {
-      if (!u.subscription) continue
-      for (const s of u.schools) {
-        if (!seen.has(s.school_id)) {
-          seen.set(s.school_id, { name: s.school_name, sub: u.subscription })
-        }
-      }
-    }
-    return Array.from(seen.values())
-  }, [users])
 
   if (status === 'loading' || loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -166,11 +155,11 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Gauges por escuela */}
-        {schoolGauges.length > 0 && (
+        {schools.length > 0 && (
           <section>
             <h2 className="text-sm font-medium text-warm-900 mb-4">Uso por escuela</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {schoolGauges.map((sg, i) => (
+              {schools.map((sg, i) => (
                 <div key={i} className="bg-white rounded-xl border border-warm-200 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-warm-900 truncate">{sg.name}</h3>
