@@ -15,6 +15,15 @@ interface GlobalStats {
   totalAI: number
 }
 
+interface SubscriptionInfo {
+  plan: string
+  status: string
+  daysLeft: number | null
+  whisperLimit: number
+  whisperUsed: number
+  aiUsed: number
+}
+
 interface UserAnalytics {
   id: string
   email: string
@@ -22,12 +31,13 @@ interface UserAnalytics {
   role: string
   status: string
   created_at: string
-  schools: Array<{ school_name: string; role: string }>
+  schools: Array<{ school_id: string; school_name: string; role: string }>
   meetingsCreated: number
   pendingActions: number
   scheduledMeetings: number
   whisperUsage: number
   aiUsage: number
+  subscription: SubscriptionInfo | null
 }
 
 type SortKey = 'name' | 'meetingsCreated' | 'pendingActions' | 'scheduledMeetings' | 'whisperUsage' | 'aiUsage'
@@ -83,6 +93,20 @@ export default function AdminAnalytics() {
     return list
   }, [users, search, sortBy, sortAsc])
 
+  // Agrupar escuelas únicas para gauges
+  const schoolGauges = useMemo(() => {
+    const seen = new Map<string, { name: string; sub: SubscriptionInfo }>()
+    for (const u of users) {
+      if (!u.subscription) continue
+      for (const s of u.schools) {
+        if (!seen.has(s.school_id)) {
+          seen.set(s.school_id, { name: s.school_name, sub: u.subscription })
+        }
+      }
+    }
+    return Array.from(seen.values())
+  }, [users])
+
   if (status === 'loading' || loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-6 h-6 border-2 border-warm-200 border-t-brand rounded-full animate-spin" />
@@ -90,15 +114,15 @@ export default function AdminAnalytics() {
   )
 
   const statCards = global ? [
-    { label: 'Usuarios', value: global.totalUsers, icon: UsersIcon, color: 'text-brand' },
-    { label: 'Reuniones', value: global.totalMeetings, icon: DocIcon, color: 'text-warm-700' },
-    { label: 'Pendientes', value: global.totalPendingActions, icon: ClockIcon, color: 'text-amber-600' },
-    { label: 'Agendadas', value: global.totalScheduled, icon: CalendarIcon, color: 'text-green-600' },
-    { label: 'Whisper', value: global.totalWhisper, icon: MicIcon, color: 'text-purple-600' },
-    { label: 'IA procesadas', value: global.totalAI, icon: SparklesIcon, color: 'text-brand-600' },
+    { label: 'Usuarios', value: global.totalUsers, color: 'text-brand' },
+    { label: 'Reuniones', value: global.totalMeetings, color: 'text-warm-700' },
+    { label: 'Pendientes', value: global.totalPendingActions, color: 'text-amber-600' },
+    { label: 'Agendadas', value: global.totalScheduled, color: 'text-green-600' },
+    { label: 'Whisper', value: global.totalWhisper, color: 'text-purple-600' },
+    { label: 'IA procesadas', value: global.totalAI, color: 'text-brand-600' },
   ] : []
 
-  const columns: Array<{ key: SortKey; label: string; className?: string }> = [
+  const columns: Array<{ key: SortKey; label: string }> = [
     { key: 'name', label: 'Usuario' },
     { key: 'meetingsCreated', label: 'Reuniones' },
     { key: 'pendingActions', label: 'Pendientes' },
@@ -120,7 +144,7 @@ export default function AdminAnalytics() {
             </Link>
             <div>
               <h1 className="text-base font-medium text-warm-900">Analítica de uso</h1>
-              <p className="text-xs text-warm-500">Uso de la plataforma por usuario</p>
+              <p className="text-xs text-warm-500">Uso de la plataforma por usuario y escuela</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -130,171 +154,253 @@ export default function AdminAnalytics() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
         {/* Global stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {statCards.map(card => (
-            <div key={card.label} className="bg-white rounded-xl border border-warm-200 p-4 flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <card.icon className={`w-4 h-4 ${card.color}`} />
-                <span className="text-xs text-warm-500">{card.label}</span>
-              </div>
-              <p className={`text-2xl font-semibold ${card.color}`}>{card.value}</p>
+            <div key={card.label} className="bg-white rounded-xl border border-warm-200 p-4 text-center">
+              <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+              <p className="text-xs text-warm-500 mt-1">{card.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Search */}
-        <div className="mb-4">
-          <input
-            type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, email o escuela..."
-            className="w-full sm:max-w-sm text-sm bg-white border border-warm-200 rounded-xl px-4 py-2.5"
-          />
-        </div>
+        {/* Gauges por escuela */}
+        {schoolGauges.length > 0 && (
+          <section>
+            <h2 className="text-sm font-medium text-warm-900 mb-4">Uso por escuela</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {schoolGauges.map((sg, i) => (
+                <div key={i} className="bg-white rounded-xl border border-warm-200 p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-warm-900 truncate">{sg.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      sg.sub.status === 'active' ? 'bg-green-50 text-green-700 border border-green-200' :
+                      sg.sub.status === 'trialing' ? 'bg-brand-50 text-brand-700 border border-brand-200' :
+                      'bg-warm-100 text-warm-600 border border-warm-200'
+                    }`}>
+                      {sg.sub.plan}
+                    </span>
+                  </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-warm-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-warm-100">
-                  {columns.map(col => (
-                    <th key={col.key}
-                      onClick={() => handleSort(col.key)}
-                      className="px-4 py-3 text-left text-xs font-medium text-warm-500 uppercase tracking-wide cursor-pointer hover:text-warm-700 select-none whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1">
-                        {col.label}
-                        {sortBy === col.key && (
-                          <svg className={`w-3 h-3 transition-transform ${sortAsc ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                        )}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm-50">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-warm-400">
-                      {search ? `No hay usuarios que coincidan con "${search}"` : 'No hay usuarios'}
-                    </td>
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Gauge Whisper */}
+                    <div className="flex flex-col items-center">
+                      <Gauge
+                        value={sg.sub.whisperUsed}
+                        max={sg.sub.whisperLimit || 1}
+                        color={sg.sub.whisperUsed / (sg.sub.whisperLimit || 1) > 0.8 ? '#dc2626' : '#7c3aed'}
+                        label="Whisper"
+                      />
+                      <p className="text-xs text-warm-500 mt-1">{sg.sub.whisperUsed}/{sg.sub.whisperLimit}h</p>
+                    </div>
+
+                    {/* Gauge IA */}
+                    <div className="flex flex-col items-center">
+                      <Gauge
+                        value={sg.sub.aiUsed}
+                        max={Math.max(sg.sub.aiUsed, 50)}
+                        color="#2563eb"
+                        label="IA"
+                      />
+                      <p className="text-xs text-warm-500 mt-1">{sg.sub.aiUsed} proc.</p>
+                    </div>
+
+                    {/* Gauge Suscripción */}
+                    <div className="flex flex-col items-center">
+                      <Gauge
+                        value={Math.max(sg.sub.daysLeft ?? 0, 0)}
+                        max={sg.sub.status === 'trialing' ? 14 : 30}
+                        color={
+                          (sg.sub.daysLeft ?? 0) <= 3 ? '#dc2626' :
+                          (sg.sub.daysLeft ?? 0) <= 7 ? '#f59e0b' :
+                          '#16a34a'
+                        }
+                        label="Días"
+                      />
+                      <p className={`text-xs mt-1 ${
+                        (sg.sub.daysLeft ?? 0) <= 3 ? 'text-red-600 font-medium' :
+                        (sg.sub.daysLeft ?? 0) <= 7 ? 'text-amber-600' :
+                        'text-warm-500'
+                      }`}>
+                        {sg.sub.daysLeft !== null
+                          ? sg.sub.daysLeft <= 0 ? 'Vencido' : `${sg.sub.daysLeft}d restantes`
+                          : 'Sin fecha'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Search + Table */}
+        <section>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="text-sm font-medium text-warm-900">Detalle por usuario</h2>
+            <input
+              type="text" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar..."
+              className="text-sm bg-white border border-warm-200 rounded-xl px-4 py-2 w-full sm:max-w-xs"
+            />
+          </div>
+
+          <div className="bg-white rounded-xl border border-warm-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-warm-100 bg-warm-50/50">
+                    {columns.map(col => (
+                      <th key={col.key}
+                        onClick={() => handleSort(col.key)}
+                        className={`px-4 py-3 text-xs font-medium text-warm-500 uppercase tracking-wide cursor-pointer hover:text-warm-700 select-none whitespace-nowrap ${
+                          col.key === 'name' ? 'text-left' : 'text-center'
+                        }`}>
+                        <span className="inline-flex items-center gap-1">
+                          {col.label}
+                          {sortBy === col.key && (
+                            <svg className={`w-3 h-3 transition-transform ${sortAsc ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          )}
+                        </span>
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-xs font-medium text-warm-500 uppercase tracking-wide text-center">Sub</th>
                   </tr>
-                ) : (
-                  filtered.map(u => {
-                    const total = u.meetingsCreated + u.whisperUsage + u.aiUsage
-                    const isActive = total > 0
-                    return (
-                      <tr key={u.id} className={`hover:bg-warm-50/50 transition-colors ${!isActive ? 'opacity-50' : ''}`}>
-                        <td className="px-4 py-3">
-                          <div>
+                </thead>
+                <tbody className="divide-y divide-warm-50">
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-sm text-warm-400">
+                        {search ? `Sin resultados para "${search}"` : 'No hay usuarios'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map(u => {
+                      const total = u.meetingsCreated + u.whisperUsage + u.aiUsage
+                      const isActive = total > 0
+                      const sub = u.subscription
+                      return (
+                        <tr key={u.id} className={`hover:bg-warm-50/50 transition-colors ${!isActive ? 'opacity-40' : ''}`}>
+                          <td className="px-4 py-3">
                             <p className="text-sm font-medium text-warm-900">{u.name ?? u.email}</p>
                             {u.name && <p className="text-xs text-warm-400">{u.email}</p>}
                             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                               {u.schools.map((s, i) => (
                                 <span key={i} className="text-xs bg-warm-100 text-warm-600 px-1.5 py-0.5 rounded">
-                                  {s.school_name} · {s.role}
+                                  {s.school_name}
                                 </span>
                               ))}
-                              {u.schools.length === 0 && (
-                                <span className="text-xs text-warm-400">Sin escuela</span>
-                              )}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <MetricCell value={u.meetingsCreated} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <MetricCell value={u.pendingActions} warn={u.pendingActions > 10} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <MetricCell value={u.scheduledMeetings} good={u.scheduledMeetings > 0} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <MetricCell value={u.whisperUsage} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <MetricCell value={u.aiUsage} />
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <MetricBadge value={u.meetingsCreated} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <MetricBadge value={u.pendingActions} warn={u.pendingActions > 10} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <MetricBadge value={u.scheduledMeetings} good={u.scheduledMeetings > 0} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <MetricBadge value={u.whisperUsage} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <MetricBadge value={u.aiUsage} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {sub ? (
+                              <SubBadge status={sub.status} daysLeft={sub.daysLeft} plan={sub.plan} />
+                            ) : (
+                              <span className="text-xs text-warm-300">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <p className="text-xs text-warm-400 mt-4">
-          Whisper = reuniones con entrada de audio. IA = reuniones procesadas con preguntas de seguimiento.
-        </p>
+          <p className="text-xs text-warm-400 mt-3">
+            Whisper = reuniones con audio transcrito. IA = reuniones procesadas con preguntas de seguimiento. Sub = días restantes de suscripción.
+          </p>
+        </section>
       </main>
     </div>
   )
 }
 
-// ─── Metric cell ──────────────────────────────────────────────────────────────
+// ─── Gauge SVG (semicircular) ─────────────────────────────────────────────────
 
-function MetricCell({ value, warn, good }: { value: number; warn?: boolean; good?: boolean }) {
+function Gauge({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
+  const pct = Math.min(value / max, 1)
+  const radius = 36
+  const stroke = 6
+  const circumference = Math.PI * radius // semicircle
+  const offset = circumference * (1 - pct)
+
+  return (
+    <div className="relative w-20 h-12">
+      <svg viewBox="0 0 80 48" className="w-full h-full">
+        {/* Background arc */}
+        <path
+          d="M 8 44 A 32 32 0 0 1 72 44"
+          fill="none"
+          stroke="#e5e0db"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+        />
+        {/* Filled arc */}
+        <path
+          d="M 8 44 A 32 32 0 0 1 72 44"
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${circumference}`}
+          strokeDashoffset={offset}
+          className="transition-all duration-700 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
+        <span className="text-sm font-bold text-warm-900">{value}</span>
+        <span className="text-[9px] text-warm-400 leading-none">{label}</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Metric badge ─────────────────────────────────────────────────────────────
+
+function MetricBadge({ value, warn, good }: { value: number; warn?: boolean; good?: boolean }) {
   if (value === 0) return <span className="text-sm text-warm-300">—</span>
   return (
-    <span className={`text-sm font-medium ${
-      warn ? 'text-amber-600' : good ? 'text-green-600' : 'text-warm-900'
+    <span className={`inline-flex items-center justify-center min-w-[28px] text-sm font-semibold px-2 py-0.5 rounded-full ${
+      warn ? 'bg-amber-50 text-amber-700' :
+      good ? 'bg-green-50 text-green-700' :
+      'bg-warm-100 text-warm-800'
     }`}>
       {value}
     </span>
   )
 }
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
+// ─── Subscription badge ───────────────────────────────────────────────────────
 
-function UsersIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  )
-}
-
-function DocIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  )
-}
-
-function ClockIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  )
-}
-
-function CalendarIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  )
-}
-
-function MicIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-    </svg>
-  )
-}
-
-function SparklesIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-    </svg>
-  )
+function SubBadge({ status, daysLeft, plan }: { status: string; daysLeft: number | null; plan: string }) {
+  if (daysLeft !== null && daysLeft <= 0) {
+    return <span className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-medium">Vencido</span>
+  }
+  if (daysLeft !== null && daysLeft <= 5) {
+    return <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">{daysLeft}d</span>
+  }
+  if (status === 'trialing') {
+    return <span className="text-xs bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-full">{daysLeft}d trial</span>
+  }
+  return <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">{daysLeft}d</span>
 }
