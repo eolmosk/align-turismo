@@ -127,6 +127,7 @@ export interface CreateMeetingInput {
   subject?: string
   academic_year?: number
   tags?: string[]
+  audio_seconds?: number
 }
 
 export interface AIGenerateResponse {

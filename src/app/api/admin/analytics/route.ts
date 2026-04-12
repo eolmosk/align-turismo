@@ -47,23 +47,7 @@ export async function GET() {
   const meetings = meetingsRes.data ?? []
   const pendingActions = actionsRes.data ?? []
   const subscriptions = subsRes.data ?? []
-  if (schoolsRes.error) console.error('[analytics] schools query error:', schoolsRes.error)
-  if (subsRes.error) console.error('[analytics] subscriptions query error:', subsRes.error)
-  console.log('[analytics] schools:', schoolsRes.data?.length, 'subs:', subsRes.data?.length)
   const schoolNames = new Map((schoolsRes.data ?? []).map(s => [s.id, s.name]))
-
-  // Suscripciones por escuela
-  const subBySchool = new Map<string, any>()
-  for (const s of subscriptions) {
-    subBySchool.set(s.school_id, s)
-  }
-
-  // Plan limits por escuela
-  const planBySchool = new Map<string, any>()
-  for (const s of subscriptions) {
-    const planDef = PLANS.find(p => p.id === s.plan)
-    if (planDef) planBySchool.set(s.school_id, planDef)
-  }
 
   // Whisper (segundos → horas) y AI usage por escuela
   const whisperSecondsBySchool = new Map<string, number>()
