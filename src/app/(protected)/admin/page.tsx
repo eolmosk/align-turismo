@@ -433,6 +433,9 @@ export default function AdminPage() {
             <p className="text-[11px] sm:text-xs text-gray-400 truncate">Align &middot; Gestión de escuelas y usuarios</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/admin/analytics" className="text-xs text-gray-500 hover:text-gray-900 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap">
+              Analítica
+            </Link>
             <Link href="/admin/subscriptions" className="text-xs text-gray-500 hover:text-gray-900 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg whitespace-nowrap">
               Suscripciones
             </Link>
