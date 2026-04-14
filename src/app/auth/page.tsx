@@ -29,7 +29,7 @@ export default function AuthPage() {
           </svg>
         </div>
         <h1 className="text-xl font-medium text-warm-900 mb-1">Gestor de reuniones</h1>
-        <p className="text-sm text-warm-500 mb-8">Acceso para directores escolares</p>
+        <p className="text-sm text-warm-500 mb-8">Acceso para equipos de turismo y hospitalidad</p>
         <button
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-warm-200 rounded-xl text-sm font-medium text-warm-700 hover:bg-warm-50 transition-colors"

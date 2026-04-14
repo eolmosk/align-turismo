@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <span className="text-[#e94560]">El seguimiento, no.</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-            Align transforma la gestion de reuniones escolares en seguimiento real con inteligencia artificial.
+            Align transforma la gestion de reuniones de turismo y hospitalidad en seguimiento real con inteligencia artificial.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -70,7 +70,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         <div className="max-w-4xl mx-auto">
           <p className="text-xs font-bold text-[#e94560] uppercase tracking-widest mb-3">El problema</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1a1a2e] mb-4 tracking-tight">
-            En cada escuela se hacen decenas de reuniones por semana
+            En cada hotel, agencia u operadora se hacen decenas de reuniones por semana
           </h2>
           <p className="text-gray-500 mb-12 max-w-lg">
             Pero sin un sistema, los acuerdos se pierden, los pendientes se olvidan y nadie recuerda quien se comprometio a que.
@@ -78,8 +78,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { icon: '📝', title: 'Minutas en papel o Word', desc: 'Archivos sueltos que nadie vuelve a abrir. Sin estructura, sin busqueda, sin continuidad.' },
-              { icon: '😵', title: 'Acuerdos que se pierden', desc: '"Quedamos en algo la vez pasada..." pero nadie recuerda exactamente que, ni quien era responsable.' },
-              { icon: '⏰', title: 'Horas de trabajo administrativo', desc: 'El equipo directivo pierde tiempo armando actas, enviando recordatorios y verificando cumplimientos.' },
+              { icon: '😵', title: 'Acuerdos que se pierden', desc: '"Quedamos en algo con el proveedor..." pero nadie recuerda exactamente que, ni quien era responsable.' },
+              { icon: '⏰', title: 'Horas de trabajo operativo', desc: 'El equipo de gestion pierde tiempo armando reportes, enviando recordatorios y verificando cumplimientos.' },
             ].map((item, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 border border-[#e8ddd3]">
                 <div className="text-2xl mb-3">{item.icon}</div>
@@ -104,8 +104,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
               { icon: '✅', title: 'Acciones con responsables', desc: 'Cada compromiso tiene un responsable asignado, fecha y estado. Nada se pierde.' },
               { icon: '💬', title: 'Entrada flexible', desc: 'Registra reuniones escribiendo, dictando por voz o subiendo un archivo. La IA hace el resto.' },
               { icon: '📧', title: 'Guias por email', desc: 'Envia automaticamente los pendientes y preguntas a los participantes con un click.' },
-              { icon: '🏫', title: 'Multi-escuela', desc: 'Ideal para redes de colegios. Cada escuela tiene su logo, colores y datos aislados.' },
-              { icon: '📊', title: 'Estadisticas', desc: 'Datos por tipo de reunion, por mes, por tema. Visibilidad total para el equipo directivo.' },
+              { icon: '🏨', title: 'Multi-propiedad', desc: 'Ideal para cadenas y grupos. Cada propiedad u organizacion tiene su espacio y datos aislados.' },
+              { icon: '📊', title: 'Estadisticas', desc: 'Datos por tipo de reunion, por mes, por tema. Visibilidad total para el equipo de gestion.' },
             ].map((item, i) => (
               <div key={i} className="flex gap-4">
                 <div className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</div>
@@ -150,17 +150,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         <div className="max-w-4xl mx-auto">
           <p className="text-xs font-bold text-[#ff6b6b] uppercase tracking-widest mb-3">Inteligencia artificial</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-            IA disenada para el contexto educativo
+            IA disenada para turismo y hospitalidad
           </h2>
           <p className="text-gray-400 mb-12 max-w-lg">
-            No es un chatbot generico. Entiende reuniones escolares y genera seguimiento accionable con sensibilidad institucional.
+            No es un chatbot generico. Entiende reuniones de equipo, proveedores y clientes, y genera seguimiento accionable con sensibilidad operativa.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[
               { icon: '📋', title: 'Resumen automatico', desc: 'Genera un resumen claro de cada reunion, destacando los puntos clave.' },
               { icon: '✅', title: 'Extraccion de compromisos', desc: 'Identifica acuerdos y los convierte en acciones asignables.' },
               { icon: '❓', title: 'Preguntas de seguimiento', desc: 'Sugiere preguntas para la proxima reunion basandose en lo discutido.' },
-              { icon: '🏷️', title: 'Clasificacion tematica', desc: 'Categoriza cada reunion: pedagogico, disciplinario, familiar, institucional.' },
+              { icon: '🏷️', title: 'Clasificacion tematica', desc: 'Categoriza cada reunion: operativo, comercial, calidad, logistica, RRHH.' },
             ].map((item, i) => (
               <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
                 <div className="text-2xl mb-3">{item.icon}</div>
@@ -181,10 +181,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {[
-              { emoji: '👩‍🏫', title: 'Docentes', desc: 'Plenarias, por departamento, por grado. Seguimiento de acuerdos pedagogicos.', bg: 'bg-blue-50 border-blue-200' },
-              { emoji: '👨‍👩‍👧', title: 'Padres / Familias', desc: 'Entrevistas individuales o grupales. Registro del dialogo y compromisos mutuos.', bg: 'bg-amber-50 border-amber-200' },
-              { emoji: '🤝', title: 'Individuales (1:1)', desc: 'Seguimiento personalizado con docentes o coordinadores. Acompanamiento documentado.', bg: 'bg-green-50 border-green-200' },
-              { emoji: '🏛️', title: 'Direccion', desc: 'Equipo directivo, consejo escolar. Decisiones estrategicas con trazabilidad.', bg: 'bg-pink-50 border-pink-200' },
+              { emoji: '👥', title: 'Equipo / Turno', desc: 'Briefings diarios, coordinacion de turno y plenarias de departamento. Acuerdos operativos documentados.', bg: 'bg-blue-50 border-blue-200' },
+              { emoji: '🤝', title: 'Proveedores', desc: 'Negociaciones, condiciones comerciales, plazos de entrega. Todo registrado con precision.', bg: 'bg-amber-50 border-amber-200' },
+              { emoji: '🧳', title: 'Clientes / Grupos', desc: 'Requerimientos, promesas realizadas y compromisos asumidos. Sin margen para malentendidos.', bg: 'bg-green-50 border-green-200' },
+              { emoji: '📈', title: 'Gerencia', desc: 'Decisiones estrategicas, KPIs y responsables. Trazabilidad ejecutiva completa.', bg: 'bg-pink-50 border-pink-200' },
             ].map((item, i) => (
               <div key={i} className={`rounded-2xl p-6 border text-left ${item.bg}`}>
                 <div className="text-3xl mb-3">{item.emoji}</div>
@@ -206,8 +206,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { icon: '🔒', title: 'Login con Google', desc: 'Autenticacion segura con cuentas institucionales. Sin contrasenas adicionales.' },
-              { icon: '🏫', title: 'Aislamiento por escuela', desc: 'Cada institucion tiene su espacio privado. Los datos nunca se mezclan.' },
-              { icon: '👥', title: 'Roles y permisos', desc: 'Director, coordinador, docente. Cada rol ve solo lo que corresponde.' },
+              { icon: '🏨', title: 'Aislamiento por organizacion', desc: 'Cada propiedad o empresa tiene su espacio privado. Los datos nunca se mezclan.' },
+              { icon: '👥', title: 'Roles y permisos', desc: 'Gerente, supervisor, staff. Cada rol ve solo lo que corresponde.' },
               { icon: '☁️', title: 'Infraestructura cloud', desc: 'Servidores profesionales con backups automaticos y conexiones encriptadas.' },
               { icon: '🤖', title: 'IA responsable', desc: 'IA de ultima generacion. Los datos de tu escuela no se usan para entrenar modelos.' },
               { icon: '📋', title: 'Auditoria completa', desc: 'Registro de toda la actividad. Ideal para supervisiones y acreditaciones.' },
@@ -226,10 +226,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       <section className="py-24 px-6 bg-[#1a1a2e] text-white text-center">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-            Tu escuela merece mejor seguimiento
+            Tu operacion merece mejor seguimiento
           </h2>
           <p className="text-gray-400 mb-10 text-lg">
-            Agenda una demo personalizada para tu institucion. Sin compromiso.
+            Agenda una demo personalizada para tu equipo. Sin compromiso.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
@@ -258,7 +258,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <span>para</span>
           <span className="font-medium text-gray-400">FrameOps &middot; Soluciones</span>
         </div>
-        <p className="text-xs text-gray-600 mt-3">align.frameops.net</p>
+        <p className="text-xs text-gray-600 mt-3">align-turismo.frameops.net</p>
       </footer>
 
     </div>
