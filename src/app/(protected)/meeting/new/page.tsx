@@ -2,12 +2,12 @@
 import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
-import { MeetingType, InputMethod, MEETING_TYPE_LABELS, Contact, TOPICS, TOPIC_LABELS } from '@/types'
+import { MeetingType, InputMethod, MEETING_TYPE_LABELS, MEETING_TYPE_COLORS, Contact, TOPICS, TOPIC_LABELS } from '@/types'
 import ContactSelector from '@/components/ContactSelector'
 import SchoolLogo from '@/components/SchoolLogo'
 import AudioRecorder from '@/components/AudioRecorder'
 
-const TYPES: MeetingType[] = ['docentes', 'padres', 'individual', 'direccion']
+const TYPES: MeetingType[] = ['equipo', 'proveedor', 'cliente', 'gerencia']
 const DURATIONS = [30, 45, 60, 90, 120]
 
 interface ThreadOption { id: string; name: string; type: MeetingType; participants: string | null }
@@ -19,7 +19,7 @@ function NewMeetingContent() {
   const isOnboarding = searchParams.get('onboarding') === '1'
 
   // Datos básicos
-  const [type, setType] = useState<MeetingType>('docentes')
+  const [type, setType] = useState<MeetingType>('equipo')
   const [title, setTitle] = useState('')
   const [participants, setParticipants] = useState('')
   const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0])
@@ -330,12 +330,7 @@ function NewMeetingContent() {
             <div className="relative">
               <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${showThreadDropdown ? 'border-blue-400 ring-2 ring-blue-100' : 'border-warm-200'}`}>
                 {selectedThread && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    selectedThread.type === 'docentes' ? 'bg-brand-50 text-brand' :
-                    selectedThread.type === 'padres' ? 'bg-brand-50 text-green-700' :
-                    selectedThread.type === 'individual' ? 'bg-brand-50 text-brand-700' :
-                    'bg-warm-100 text-warm-600'
-                  }`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${MEETING_TYPE_COLORS[selectedThread.type] ?? 'bg-warm-100 text-warm-600'}`}>
                     {MEETING_TYPE_LABELS[selectedThread.type]}
                   </span>
                 )}
@@ -374,12 +369,7 @@ function NewMeetingContent() {
                           <p className="text-sm font-medium text-warm-900 truncate">{t.name}</p>
                           {t.participants && <p className="text-xs text-warm-500 truncate">{t.participants}</p>}
                         </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                          t.type === 'docentes' ? 'bg-brand-50 text-brand' :
-                          t.type === 'padres' ? 'bg-brand-50 text-green-700' :
-                          t.type === 'individual' ? 'bg-brand-50 text-brand-700' :
-                          'bg-warm-100 text-warm-600'
-                        }`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${MEETING_TYPE_COLORS[t.type] ?? 'bg-warm-100 text-warm-600'}`}>
                           {MEETING_TYPE_LABELS[t.type]}
                         </span>
                       </button>

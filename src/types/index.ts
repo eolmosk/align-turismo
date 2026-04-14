@@ -1,19 +1,19 @@
-export type MeetingType = 'docentes' | 'padres' | 'individual' | 'direccion'
+export type MeetingType = 'equipo' | 'proveedor' | 'cliente' | 'gerencia'
 export type InputMethod = 'text' | 'voice' | 'file' | 'audio'
 export type UserRole = 'owner' | 'director' | 'vicedirector' | 'coordinador' | 'docente' | 'administrativo' | 'pending'
 export type UserStatus = 'active' | 'pending' | 'rejected'
-export type MeetingTopic = 'pedagógico' | 'disciplinario' | 'familiar' | 'institucional' | 'curricular' | 'administrativo'
+export type MeetingTopic = 'operativo' | 'comercial' | 'calidad' | 'RRHH' | 'logística' | 'seguridad'
 
 export const TOPIC_LABELS: Record<MeetingTopic, string> = {
-  'pedagógico':    'Pedagógico',
-  'disciplinario': 'Disciplinario',
-  'familiar':      'Familiar',
-  'institucional': 'Institucional',
-  'curricular':    'Curricular',
-  'administrativo':'Administrativo',
+  'operativo': 'Operativo',
+  'comercial': 'Comercial',
+  'calidad':   'Calidad / Experiencia',
+  'RRHH':      'RRHH',
+  'logística': 'Logística',
+  'seguridad': 'Seguridad',
 }
 
-export const TOPICS: MeetingTopic[] = ['pedagógico', 'disciplinario', 'familiar', 'institucional', 'curricular', 'administrativo']
+export const TOPICS: MeetingTopic[] = ['operativo', 'comercial', 'calidad', 'RRHH', 'logística', 'seguridad']
 
 export interface Contact {
   id: string
@@ -138,22 +138,22 @@ export interface AIGenerateResponse {
 }
 
 export const MEETING_TYPE_LABELS: Record<MeetingType, string> = {
-  docentes: 'Docentes',
-  padres: 'Padres / Familias',
-  individual: 'Individual (1:1)',
-  direccion: 'Dirección',
+  equipo:    'Equipo / Turno',
+  proveedor: 'Proveedor',
+  cliente:   'Cliente',
+  gerencia:  'Gerencia',
 }
 
 export const MEETING_TYPE_COLORS: Record<MeetingType, string> = {
-  docentes: 'bg-brand-50 text-brand-700 border-brand-200',
-  padres: 'bg-warm-50 text-warm-700 border-warm-200',
-  individual: 'bg-brand-100 text-brand-600 border-brand-200',
-  direccion: 'bg-warm-100 text-warm-600 border-warm-200',
+  equipo:    'bg-brand-50 text-brand-700 border-brand-200',
+  proveedor: 'bg-warm-50 text-warm-700 border-warm-200',
+  cliente:   'bg-brand-100 text-brand-600 border-brand-200',
+  gerencia:  'bg-warm-100 text-warm-600 border-warm-200',
 }
 
 export const MEETING_TYPE_DOT: Record<MeetingType, string> = {
-  docentes: 'bg-brand',
-  padres: 'bg-warm-400',
-  individual: 'bg-brand-300',
-  direccion: 'bg-warm-300',
+  equipo:    'bg-brand',
+  proveedor: 'bg-warm-400',
+  cliente:   'bg-brand-300',
+  gerencia:  'bg-warm-300',
 }
