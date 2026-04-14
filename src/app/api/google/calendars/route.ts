@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3'
 
 export async function GET() {

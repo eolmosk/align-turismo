@@ -8,6 +8,8 @@ import { PLANS } from '@/lib/subscription-shared'
 import { randomBytes } from 'crypto'
 import { Resend } from 'resend'
 
+export const dynamic = 'force-dynamic'
+
 const ADMIN_EMAIL = 'eolmosk@gmail.com'
 
 // GET /api/invitations — lista invitaciones activas de la escuela

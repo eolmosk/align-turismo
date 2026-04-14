@@ -5,6 +5,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { upsertMeetingEmbedding } from '@/lib/embeddings'
 import { getMeetingVisibility, stripMeetingFields } from '@/lib/visibility'
 
+export const dynamic = 'force-dynamic'
+
 async function isParticipant(meetingId: string, userId: string): Promise<boolean> {
   const { data } = await supabaseAdmin
     .from('meeting_participants')

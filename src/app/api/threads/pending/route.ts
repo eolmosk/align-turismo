@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/threads/pending?exclude=threadId
 // Devuelve hilos con acciones pendientes, excluyendo el hilo actual
 export async function GET(req: NextRequest) {

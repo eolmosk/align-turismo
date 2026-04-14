@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // Palabras comunes a ignorar en el análisis de frecuencia
 const STOP_WORDS = new Set([
   'de', 'la', 'el', 'en', 'y', 'a', 'los', 'las', 'un', 'una', 'se', 'del',

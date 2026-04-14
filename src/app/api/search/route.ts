@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { canSeeAllMeetings } from '@/lib/permissions'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/search?q=texto — busca en reuniones e hilos
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)

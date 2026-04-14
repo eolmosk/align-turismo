@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/contacts/import — importa contactos desde CSV
 // Body: { rows: Array<Record<string, string>> }
 // Columnas reconocidas: name, email, phone, role, external_id

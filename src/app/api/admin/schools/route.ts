@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 const ADMIN_USER_ID = '757692ca-333e-469d-a9eb-d370db452cde'
 
 function isAdmin(userId: string | undefined) {

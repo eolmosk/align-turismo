@@ -5,6 +5,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { buildReminderEmail } from '@/lib/email/reminder'
 import { Resend } from 'resend'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/email/send — envía el recordatorio manualmente para un hilo
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)

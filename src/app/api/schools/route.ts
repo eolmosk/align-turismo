@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/schools — lista las escuelas a las que pertenece el usuario
 export async function GET() {
   const session = await getServerSession(authOptions)

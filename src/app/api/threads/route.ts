@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getMeetingVisibility } from '@/lib/visibility'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/threads — lista hilos de la escuela con stats
 // GET /api/threads?archived=true — lista hilos archivados
 export async function GET(req: NextRequest) {

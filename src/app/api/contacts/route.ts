@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/contacts?q=texto  — búsqueda general
 // GET /api/contacts?thread_id=uuid — contactos de un hilo específico
 export async function GET(req: NextRequest) {

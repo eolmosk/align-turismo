@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/invitations/accept — acepta una invitación por token
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)

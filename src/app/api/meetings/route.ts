@@ -7,6 +7,8 @@ import { upsertMeetingEmbedding } from '@/lib/embeddings'
 import { requireActiveSubscription } from '@/lib/subscription'
 import { getMeetingVisibility, stripMeetingFields } from '@/lib/visibility'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/meetings — lista reuniones de la escuela del usuario
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)

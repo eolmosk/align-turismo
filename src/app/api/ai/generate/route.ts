@@ -6,6 +6,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { MEETING_TYPE_LABELS, MeetingType, AIGenerateResponse } from '@/types'
 import { requireActiveSubscription } from '@/lib/subscription'
 
+export const dynamic = 'force-dynamic'
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {

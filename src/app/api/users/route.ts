@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { canManageUsers } from '@/lib/permissions'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/users — lista usuarios de la escuela
 export async function GET() {
   const session = await getServerSession(authOptions)

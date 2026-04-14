@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ensureTrial } from '@/lib/subscription'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/onboarding — completa el setup inicial del director
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)

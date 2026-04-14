@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3'
 const DRIVE_API = 'https://www.googleapis.com/drive/v3'
 const DOCS_API = 'https://docs.googleapis.com/v1'

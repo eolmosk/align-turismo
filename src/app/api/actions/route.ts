@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getMeetingVisibility } from '@/lib/visibility'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/actions?filter=all|mine|unassigned (default: all)
 // Pendientes de la escuela, agrupados por hilo, con info de assignee.
 export async function GET(req: NextRequest) {
