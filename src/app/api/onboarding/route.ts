@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const { schoolName, groupName, directorName } = await req.json()
 
   if (!schoolName?.trim()) {
-    return NextResponse.json({ error: 'El nombre de la escuela es requerido' }, { status: 400 })
+    return NextResponse.json({ error: 'El nombre de la organización es requerido' }, { status: 400 })
   }
 
   // 1. Crear la escuela

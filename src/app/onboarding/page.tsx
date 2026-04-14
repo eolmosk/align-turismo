@@ -1,9 +1,9 @@
-﻿'use client'
+'use client'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 const STEPS = [
-  { id: 1, label: 'Tu escuela' },
+  { id: 1, label: 'Tu organización' },
   { id: 2, label: 'Cómo funciona' },
 ]
 
@@ -64,7 +64,7 @@ function AcceptInvitationFlow({ token }: { token: string }) {
                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h1 className="text-xl font-medium text-warm-900 mb-1">Te invitaron a una escuela</h1>
+              <h1 className="text-xl font-medium text-warm-900 mb-1">Te invitaron a una organización</h1>
               <p className="text-sm text-warm-500">
                 Hola{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Aceptá la invitación para acceder.
               </p>
@@ -87,7 +87,7 @@ function AcceptInvitationFlow({ token }: { token: string }) {
   )
 }
 
-// ─── Flujo de onboarding de director ─────────────────────────────────────────
+// ─── Flujo de onboarding de gerente ──────────────────────────────────────────
 
 function DirectorOnboardingFlow() {
   const { data: session } = useSession()
@@ -97,20 +97,24 @@ function DirectorOnboardingFlow() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const [schoolName, setSchoolName] = useState('')
+  const [orgName, setOrgName] = useState('')
   const [groupName, setGroupName] = useState('')
-  const [directorName, setDirectorName] = useState(session?.user?.name ?? '')
+  const [managerName, setManagerName] = useState(session?.user?.name ?? '')
 
   const handleStep1 = async () => {
-    if (!schoolName.trim()) { setError('El nombre de la escuela es requerido.'); return }
+    if (!orgName.trim()) { setError('El nombre de la organización es requerido.'); return }
     setSaving(true); setError('')
     const res = await fetch('/api/onboarding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schoolName, groupName, directorName }),
+      body: JSON.stringify({ schoolName: orgName, groupName, directorName: managerName }),
     })
     setSaving(false)
-    if (!res.ok) { setError('Hubo un error guardando la escuela. Intentá de nuevo.'); return }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? 'Hubo un error guardando la organización. Intentá de nuevo.')
+      return
+    }
     setStep(2)
   }
 
@@ -152,27 +156,27 @@ function DirectorOnboardingFlow() {
                 <h1 className="text-2xl font-medium text-warm-900 mb-2">
                   Bienvenido{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}
                 </h1>
-                <p className="text-warm-500">Primero configuremos tu escuela. Solo tarda un minuto.</p>
+                <p className="text-warm-500">Primero configuremos tu organización. Solo tarda un minuto.</p>
               </div>
               <div className="bg-white rounded-2xl border border-warm-200 p-6 space-y-5">
                 <div>
                   <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Tu nombre *</label>
-                  <input type="text" value={directorName} onChange={e => setDirectorName(e.target.value)}
-                    placeholder="Ej: María García" className="w-full text-sm" />
+                  <input type="text" value={managerName} onChange={e => setManagerName(e.target.value)}
+                    placeholder="Ej: Carlos López" className="w-full text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Nombre de la escuela *</label>
-                  <input type="text" value={schoolName} onChange={e => setSchoolName(e.target.value)}
-                    placeholder="Ej: Colegio San Martín" className="w-full text-sm" autoFocus />
+                  <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Nombre de la organización *</label>
+                  <input type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
+                    placeholder="Ej: Hotel Patagonia, Agencia Rumbos" className="w-full text-sm" autoFocus />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">
-                    Grupo o red educativa <span className="text-warm-400 normal-case font-normal">(opcional)</span>
+                    Cadena o grupo <span className="text-warm-400 normal-case font-normal">(opcional)</span>
                   </label>
                   <input type="text" value={groupName} onChange={e => setGroupName(e.target.value)}
-                    placeholder="Ej: Red Educativa Norte" className="w-full text-sm" />
+                    placeholder="Ej: Grupo Austral, Cadena Sol" className="w-full text-sm" />
                   <p className="text-xs text-warm-400 mt-1.5">
-                    Si tu escuela pertenece a un grupo, completá esto para habilitar el panel multi-escuela.
+                    Si tu organización pertenece a un grupo o cadena, completá esto para habilitar el panel multi-propiedad.
                   </p>
                 </div>
               </div>
@@ -194,7 +198,7 @@ function DirectorOnboardingFlow() {
                 {[
                   { num: '1', title: 'Registrás la reunión', desc: 'Escribís las notas, dictás por voz o grabás la reunión en vivo. La app acepta cualquier formato.', color: 'bg-brand-50 text-brand' },
                   { num: '2', title: 'La IA genera el seguimiento', desc: 'Automáticamente aparecen 3 preguntas clave para la próxima reunión, los compromisos detectados y un resumen ejecutivo.', color: 'bg-purple-50 text-purple-700' },
-                  { num: '3', title: 'Te avisamos antes de la próxima', desc: 'Si agendás la próxima reunión, recibís un aviso en Google Calendar 15 minutos antes con toda la guía lista. La minuta se guarda automáticamente en Drive.', color: 'bg-brand-50 text-brand' },
+                  { num: '3', title: 'Te avisamos antes de la próxima', desc: 'Si agendás la próxima reunión, recibís un aviso en Google Calendar 15 minutos antes con toda la guía lista.', color: 'bg-brand-50 text-brand' },
                 ].map(item => (
                   <div key={item.num} className="bg-white rounded-xl border border-warm-200 p-5 flex gap-4">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0 ${item.color}`}>{item.num}</div>
@@ -204,14 +208,6 @@ function DirectorOnboardingFlow() {
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="bg-brand-50 border border-amber-200 rounded-xl p-4 mt-4 flex gap-3">
-                <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p className="text-sm text-brand-700 leading-relaxed">
-                  Para el aviso de Calendar y guardar en Drive necesitás hacer clic en esos botones la primera vez. Google te pide confirmar los permisos.
-                </p>
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => router.push('/meeting/new?onboarding=1')}
