@@ -413,7 +413,7 @@ function NewMeetingContent() {
           <div>
             <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Nombre de la reunión *</label>
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder={selectedThread ? `Reunión con ${selectedThread.name}` : 'Ej: Reunión docentes 3er grado'}
+              placeholder={selectedThread ? `Reunión con ${selectedThread.name}` : 'Ej: Briefing de turno mañana · Reunión con proveedor'}
               className="w-full text-sm" />
           </div>
           <div>
@@ -461,7 +461,7 @@ function NewMeetingContent() {
                     placeholder="Ej: 3ro A" className="w-full text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs text-warm-400 block mb-1">Materia</label>
+                  <label className="text-xs text-warm-400 block mb-1">Categoría</label>
                   <input type="text" value={subject} onChange={e => setSubject(e.target.value)}
                     placeholder="Ej: Matemáticas" className="w-full text-sm" />
                 </div>

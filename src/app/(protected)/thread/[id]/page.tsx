@@ -518,10 +518,10 @@ function EditThreadModal({ thread, onClose, onSaved }: {
   onClose: () => void
   onSaved: (updated: any) => void
 }) {
-  const TYPES: MeetingType[] = ['docentes', 'padres', 'individual', 'direccion']
+  const TYPES: MeetingType[] = ['equipo', 'proveedor', 'cliente', 'gerencia']
 
   const [name, setName] = useState(thread.name ?? '')
-  const [type, setType] = useState<MeetingType>(thread.type ?? 'individual')
+  const [type, setType] = useState<MeetingType>(thread.type ?? 'equipo')
   const [description, setDescription] = useState(thread.description ?? '')
   const [course, setCourse] = useState(thread.course ?? '')
   const [subject, setSubject] = useState(thread.subject ?? '')
@@ -607,8 +607,8 @@ function EditThreadModal({ thread, onClose, onSaved }: {
               <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="Ej: 3ro A" className="w-full text-sm" />
             </div>
             <div>
-              <label className="text-xs text-warm-400 block mb-1">Materia</label>
-              <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ej: Matemáticas" className="w-full text-sm" />
+              <label className="text-xs text-warm-400 block mb-1">Categoría</label>
+              <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ej: Temporada alta, Grupo VIP" className="w-full text-sm" />
             </div>
             <div>
               <label className="text-xs text-warm-400 block mb-1">Año lectivo</label>

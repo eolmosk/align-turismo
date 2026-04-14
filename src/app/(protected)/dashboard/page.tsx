@@ -473,11 +473,7 @@ function HilosTab({ threads, onNewThread, onUnarchive }: { threads: ThreadSummar
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-warm-900 truncate">{t.name}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      t.type === 'docentes' ? 'bg-brand-50 text-brand-700' :
-                      t.type === 'padres' ? 'bg-warm-50 text-warm-700' :
-                      t.type === 'individual' ? 'bg-brand-100 text-brand-600' : 'bg-warm-100 text-warm-600'
-                    }`}>{MEETING_TYPE_LABELS[t.type]}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${MEETING_TYPE_COLORS[t.type] ?? 'bg-warm-100 text-warm-600'}`}>{MEETING_TYPE_LABELS[t.type]}</span>
                     {t.course && <span className="text-xs text-warm-400">{t.course}</span>}
                     {t.subject && <span className="text-xs text-warm-400">{t.subject}</span>}
                   </div>
@@ -549,13 +545,13 @@ function HilosTab({ threads, onNewThread, onUnarchive }: { threads: ThreadSummar
 
 // ─── Tab: Reuniones (Kanban) ──────────────────────────────────────────────────
 
-const COLUMNS: MeetingType[] = ['docentes', 'padres', 'individual', 'direccion']
+const COLUMNS: MeetingType[] = ['equipo', 'proveedor', 'cliente', 'gerencia']
 
 const COLUMN_STYLES: Record<MeetingType, { header: string; dot: string }> = {
-  docentes:    { header: 'bg-brand-50 text-brand-700 border-brand-200',   dot: 'bg-brand' },
-  padres:      { header: 'bg-warm-50 text-warm-700 border-warm-200', dot: 'bg-warm-400' },
-  individual:  { header: 'bg-brand-100 text-brand-600 border-brand-200', dot: 'bg-brand-300' },
-  direccion:   { header: 'bg-warm-100 text-warm-600 border-warm-200',   dot: 'bg-warm-300' },
+  equipo:    { header: 'bg-brand-50 text-brand-700 border-brand-200',   dot: 'bg-brand' },
+  proveedor: { header: 'bg-warm-50 text-warm-700 border-warm-200',      dot: 'bg-warm-400' },
+  cliente:   { header: 'bg-brand-100 text-brand-600 border-brand-200',  dot: 'bg-brand-300' },
+  gerencia:  { header: 'bg-warm-100 text-warm-600 border-warm-200',     dot: 'bg-warm-300' },
 }
 
 function ReunionesTab({
@@ -589,7 +585,7 @@ function ReunionesTab({
   }), [meetings, search, filterCourse, filterSubject, filterYear, filterTag])
 
   const byType = useMemo(() => {
-    const map: Record<MeetingType, Meeting[]> = { docentes: [], padres: [], individual: [], direccion: [] }
+    const map: Record<MeetingType, Meeting[]> = { equipo: [], proveedor: [], cliente: [], gerencia: [] }
     for (const m of filtered) map[m.type].push(m)
     return map
   }, [filtered])
@@ -636,7 +632,7 @@ function ReunionesTab({
             </select>
             <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
               className="text-xs border border-warm-200 rounded-lg px-3 py-1.5 bg-white">
-              <option value="">Todas las materias</option>
+              <option value="">Todas las categorías</option>
               {subjects.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
@@ -745,7 +741,7 @@ function NewThreadModal({ onClose, onCreated }: {
   onCreated: (thread: any) => void
 }) {
   const [name, setName] = useState('')
-  const [type, setType] = useState<MeetingType>('individual')
+  const [type, setType] = useState<MeetingType>('equipo')
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([])
   const [topics, setTopics] = useState<string[]>([])
   const [description, setDescription] = useState('')
@@ -756,7 +752,7 @@ function NewThreadModal({ onClose, onCreated }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const TYPES: MeetingType[] = ['docentes', 'padres', 'individual', 'direccion']
+  const TYPES: MeetingType[] = ['equipo', 'proveedor', 'cliente', 'gerencia']
 
   const handleCreate = async () => {
     if (!name.trim()) { setError('El nombre es requerido.'); return }
@@ -796,7 +792,7 @@ function NewThreadModal({ onClose, onCreated }: {
           <div>
             <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Nombre del hilo *</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)}
-              placeholder="Ej: Prof. García · Familia Rodríguez · Equipo docente"
+              placeholder="Ej: Jefa de Recepción · Supervisor Housekeeping · Guía turístico"
               className="w-full text-sm" autoFocus />
           </div>
 
@@ -838,7 +834,7 @@ function NewThreadModal({ onClose, onCreated }: {
               Descripción <span className="text-warm-400 normal-case font-normal">(opcional)</span>
             </label>
             <input type="text" value={description} onChange={e => setDescription(e.target.value)}
-              placeholder="Ej: Seguimiento mensual del rendimiento de 3er grado" className="w-full text-sm" />
+              placeholder="Ej: Seguimiento semanal del equipo de recepción" className="w-full text-sm" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -848,9 +844,9 @@ function NewThreadModal({ onClose, onCreated }: {
                 placeholder="Ej: 3ro A" className="w-full text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Materia</label>
+              <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Categoría</label>
               <input type="text" value={subject} onChange={e => setSubject(e.target.value)}
-                placeholder="Ej: Matemáticas" className="w-full text-sm" />
+                placeholder="Ej: Temporada alta, Grupo VIP" className="w-full text-sm" />
             </div>
             <div>
               <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Año lectivo</label>
@@ -1140,9 +1136,9 @@ function AskTab() {
   const [error, setError] = useState<string | null>(null)
 
   const suggestions = [
-    '¿Qué dijimos sobre la familia García?',
-    '¿Qué compromisos quedaron pendientes con 5° grado?',
-    '¿Qué temas recurrentes aparecen en reuniones con padres?',
+    '¿Qué acordamos con el proveedor de lencería?',
+    '¿Qué compromisos quedaron pendientes del último briefing?',
+    '¿Qué temas recurrentes aparecen en reuniones con clientes?',
   ]
 
   async function handleAsk(q?: string) {

@@ -732,7 +732,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
           <div>
             <label className="text-xs font-medium text-warm-500 uppercase tracking-wide block mb-1.5">Tipo de reunión</label>
             <div className="flex flex-wrap gap-1.5">
-              {(['docentes', 'padres', 'individual', 'direccion'] as MeetingType[]).map(t => (
+              {(['equipo', 'proveedor', 'cliente', 'gerencia'] as MeetingType[]).map(t => (
                 <button key={t} type="button" onClick={() => setType(t)}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     type === t ? 'bg-brand text-white border-brand' : 'border-warm-200 text-warm-600 hover:border-warm-300'
@@ -764,11 +764,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
             <div className="relative">
               <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${showDropdown ? 'border-blue-400 ring-2 ring-blue-100' : 'border-warm-200'}`}>
                 {selectedThread && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    selectedThread.type === 'docentes' ? 'bg-brand-50 text-brand' :
-                    selectedThread.type === 'padres' ? 'bg-brand-50 text-green-700' :
-                    selectedThread.type === 'individual' ? 'bg-brand-50 text-brand-700' : 'bg-warm-100 text-warm-600'
-                  }`}>{MEETING_TYPE_LABELS[selectedThread.type]}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${MEETING_TYPE_COLORS[selectedThread.type] ?? 'bg-warm-100 text-warm-600'}`}>{MEETING_TYPE_LABELS[selectedThread.type]}</span>
                 )}
                 <input type="text" value={threadSearch}
                   onChange={e => { setThreadSearch(e.target.value); setShowDropdown(true); if (!e.target.value) clearThread() }}
@@ -791,11 +787,7 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
                     : filteredThreads.map(t => (
                         <button key={t.id} onClick={() => selectThread(t)}
                           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-warm-50 text-left text-sm text-warm-900 border-b border-warm-50 last:border-0">
-                          <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                            t.type === 'docentes' ? 'bg-brand-50 text-brand' :
-                            t.type === 'padres' ? 'bg-brand-50 text-green-700' :
-                            t.type === 'individual' ? 'bg-brand-50 text-brand-700' : 'bg-warm-100 text-warm-600'
-                          }`}>{MEETING_TYPE_LABELS[t.type]}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${MEETING_TYPE_COLORS[t.type] ?? 'bg-warm-100 text-warm-600'}`}>{MEETING_TYPE_LABELS[t.type]}</span>
                           {t.name}
                         </button>
                       ))
@@ -848,8 +840,8 @@ function EditMeetingModal({ meeting, onClose, onSaved }: {
                 <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="Ej: 3ro A" className="w-full text-sm" />
               </div>
               <div>
-                <label className="text-xs text-warm-400 block mb-1">Materia</label>
-                <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ej: Matemáticas" className="w-full text-sm" />
+                <label className="text-xs text-warm-400 block mb-1">Categoría</label>
+                <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ej: Temporada alta, Grupo VIP" className="w-full text-sm" />
               </div>
               <div>
                 <label className="text-xs text-warm-400 block mb-1">Año lectivo</label>

@@ -8,10 +8,10 @@ import SchoolLogo from '@/components/SchoolLogo'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   owner: 'Owner',
-  director: 'Director',
-  vicedirector: 'Vice-director',
-  coordinador: 'Coordinador',
-  docente: 'Docente',
+  director: 'Gerente General',
+  vicedirector: 'Subgerente',
+  coordinador: 'Supervisor',
+  docente: 'Staff',
   administrativo: 'Administrativo',
   pending: 'Pendiente',
 }
@@ -251,7 +251,7 @@ export default function UsersPage() {
                   type="email"
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
-                  placeholder="nombre@escuela.edu"
+                  placeholder="nombre@empresa.com"
                   className="w-full text-sm"
                 />
               </div>

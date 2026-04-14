@@ -69,10 +69,10 @@ export default function StatsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
               {[
                 { label: 'Total reuniones', value: stats.totalMeetings },
-                { label: 'Docentes', value: stats.byType['docentes'] ?? 0 },
-                { label: 'Padres', value: stats.byType['padres'] ?? 0 },
-                { label: 'Individual', value: stats.byType['individual'] ?? 0 },
-                { label: 'Dirección', value: stats.byType['direccion'] ?? 0 },
+                { label: 'Equipo / Turno', value: stats.byType['equipo'] ?? 0 },
+                { label: 'Proveedor', value: stats.byType['proveedor'] ?? 0 },
+                { label: 'Cliente', value: stats.byType['cliente'] ?? 0 },
+                { label: 'Gerencia', value: stats.byType['gerencia'] ?? 0 },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-xl border border-warm-200 p-4">
                   <p className="text-xs text-warm-500 mb-1">{s.label}</p>
