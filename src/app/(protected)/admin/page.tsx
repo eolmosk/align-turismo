@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { invalidateBrandCache } from '@/components/SchoolBranding'
 
-const ADMIN_USER_ID = '757692ca-333e-469d-a9eb-d370db452cde'
 
 interface School {
   id: string; name: string; group_name: string | null
@@ -393,7 +392,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (!session?.user?.id || session.user.id !== ADMIN_USER_ID) {
+    if (session?.user?.role !== 'owner') {
       router.push('/dashboard')
       return
     }

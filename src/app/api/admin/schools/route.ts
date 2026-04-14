@@ -5,16 +5,14 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_USER_ID = '757692ca-333e-469d-a9eb-d370db452cde'
-
-function isAdmin(userId: string | undefined) {
-  return userId === ADMIN_USER_ID
+function isAdmin(role: string | undefined) {
+  return role === 'owner'
 }
 
 // GET /api/admin/schools — listar todas las escuelas
 export async function GET() {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
@@ -30,7 +28,7 @@ export async function GET() {
 // POST /api/admin/schools — crear escuela
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
@@ -52,12 +50,14 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Dar acceso al admin automáticamente
-  await supabaseAdmin.from('user_schools').upsert({
-    user_id: ADMIN_USER_ID,
-    school_id: data.id,
-    role: 'owner',
-  }, { onConflict: 'user_id,school_id' })
+  // Dar acceso al owner automáticamente
+  if (session?.user?.id) {
+    await supabaseAdmin.from('user_schools').upsert({
+      user_id: session.user.id,
+      school_id: data.id,
+      role: 'owner',
+    }, { onConflict: 'user_id,school_id' })
+  }
 
   return NextResponse.json(data, { status: 201 })
 }
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 // PATCH /api/admin/schools — actualizar escuela
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest) {
 // DELETE /api/admin/schools — eliminar escuela
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 

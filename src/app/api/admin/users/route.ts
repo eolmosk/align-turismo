@@ -5,16 +5,14 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_USER_ID = '757692ca-333e-469d-a9eb-d370db452cde'
-
-function isAdmin(userId: string | undefined) {
-  return userId === ADMIN_USER_ID
+function isAdmin(role: string | undefined) {
+  return role === 'owner'
 }
 
 // GET /api/admin/users — listar todos los usuarios con sus escuelas
 export async function GET() {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
@@ -48,7 +46,7 @@ export async function GET() {
 // POST /api/admin/users — asignar usuario a escuela
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.id)) {
+  if (!isAdmin(session?.user?.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
